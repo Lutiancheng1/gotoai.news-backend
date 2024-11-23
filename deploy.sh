@@ -10,7 +10,7 @@ check_port() {
 }
 
 # 检查必要端口
-check_port 3002
+check_port 3001
 check_port 5002
 check_port 6380
 
