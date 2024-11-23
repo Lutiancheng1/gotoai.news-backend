@@ -1,78 +1,69 @@
 import { Request, Response } from 'express';
 import News from '../models/news.model';
 import { AuthRequest } from '../types/auth';
+import User from '../models/user.model';
 
 export class NewsController {
   // 创建新闻
   static async create(req: AuthRequest, res: Response) {
     try {
-      const { title, content, summary, category, tags } = req.body;
-      const cover = req.file?.path;
+      const { title, content, category, status = 'draft', cover } = req.body;
+      const summary = content.substring(0, 200);
 
-      const news = new News({
+      const news = await News.create({
         title,
         content,
         summary,
         category,
-        tags,
-        cover: cover || '',
+        status,
+        cover: cover || null,
         author: req.user?.userId,
       });
 
-      await news.save();
+      const populatedNews = await News.findById(news._id)
+        .populate('author', 'username')
+        .populate('cover');
 
       res.status(201).json({
-        message: '新闻创建成功',
-        news,
+        status: 'success',
+        data: { news: populatedNews },
       });
     } catch (error) {
-      res.status(500).json({ message: '服务器错误', error });
+      res.status(500).json({ status: 'error', message: '服务器错误', error });
     }
   }
 
   // 获取新闻列表
-  static async getList(req: Request, res: Response) {
+  static async getList(req: AuthRequest, res: Response) {
     try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
-      const category = req.query.category as string;
-      const status = req.query.status as string;
-      const keyword = req.query.keyword as string;
-
+      const { page = 1, limit = 10, category, status, author } = req.query;
       const query: any = {};
-
-      if (category) {
-        query.category = category;
-      }
-
-      if (status) {
-        query.status = status;
-      }
-
-      if (keyword) {
-        query.$or = [
-          { title: { $regex: keyword, $options: 'i' } },
-          { summary: { $regex: keyword, $options: 'i' } },
-        ];
-      }
+      
+      if (category) query.category = category;
+      if (status) query.status = status;
+      if (author) query.author = author;
 
       const total = await News.countDocuments(query);
       const news = await News.find(query)
         .populate('author', 'username')
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(limit);
+        .populate('cover')
+        .sort('-createdAt')
+        .skip((Number(page) - 1) * Number(limit))
+        .limit(Number(limit));
 
       res.json({
-        news,
-        pagination: {
-          total,
-          page,
-          pages: Math.ceil(total / limit),
+        status: 'success',
+        data: {
+          news,
+          pagination: {
+            total,
+            page: Number(page),
+            pages: Math.ceil(total / Number(limit)),
+          },
         },
       });
     } catch (error) {
-      res.status(500).json({ message: '服务器错误', error });
+      res.status(500).json({ status: 'error', message: '服务器错误', error });
     }
   }
 
@@ -83,61 +74,60 @@ export class NewsController {
         .populate('author', 'username');
 
       if (!news) {
-        return res.status(404).json({ message: '新闻不存在' });
+        return res.status(404).json({ 
+          status: 'error',
+          message: '新闻不存在' 
+        });
       }
 
-      // 更新浏览次数
-      news.viewCount += 1;
-      await news.save();
-
-      res.json(news);
+      res.json({
+        status: 'success',
+        data: {
+          news
+        }
+      });
     } catch (error) {
-      res.status(500).json({ message: '服务器错误', error });
+      res.status(500).json({ 
+        status: 'error',
+        message: '服务器错误', 
+        error 
+      });
     }
   }
 
   // 更新新闻
   static async update(req: AuthRequest, res: Response) {
     try {
-      const { title, content, summary, category, tags, status } = req.body;
-      const cover = req.file?.path;
-
+      const { title, content, category, status, cover } = req.body;
       const news = await News.findById(req.params.id);
 
       if (!news) {
-        return res.status(404).json({ message: '新闻不存在' });
+        return res.status(404).json({ status: 'error', message: '新闻不存在' });
       }
 
-      // 检查权限
-      if (news.author.toString() !== req.user?.userId && req.user?.role !== 'admin') {
-        return res.status(403).json({ message: '没有权限修改此新闻' });
+      const authorId = news.author.toString();
+      const userId = req.user?.userId.toString();
+      const userRole = req.user?.role;
+
+      if (authorId !== userId && userRole !== 'admin') {
+        return res.status(403).json({ status: 'error', message: '没有权限修改此新闻' });
       }
 
-      const updateData: any = {
-        title,
-        content,
-        summary,
-        category,
-        tags,
-        status,
-      };
-
-      if (cover) {
-        updateData.cover = cover;
-      }
-
-      const updatedNews = await News.findByIdAndUpdate(
-        req.params.id,
-        updateData,
-        { new: true }
-      ).populate('author', 'username');
+      const summary = content.substring(0, 20);
+      const updateData: any = { title, content, summary, category, status };
+      // 如果 avatar 字段存在于请求中，则更新它
+      if (req.body.hasOwnProperty('cover')) {
+        updateData.cover = cover || null; // 如果 avatar 为空，则设置为 null
+      } 
+      const updatedNews = await News.findByIdAndUpdate(req.params.id, updateData, { new: true }).populate('author', 'username');
 
       res.json({
+        status: 'success',
         message: '新闻更新成功',
-        news: updatedNews,
+        data: { news: updatedNews },
       });
     } catch (error) {
-      res.status(500).json({ message: '服务器错误', error });
+      res.status(500).json({ status: 'error', message: '服务器错误', error });
     }
   }
 
@@ -147,19 +137,18 @@ export class NewsController {
       const news = await News.findById(req.params.id);
 
       if (!news) {
-        return res.status(404).json({ message: '新闻不存在' });
+        return res.status(404).json({ status: 'error', message: '新闻不存在' });
       }
 
-      // 检查权限
       if (news.author.toString() !== req.user?.userId && req.user?.role !== 'admin') {
-        return res.status(403).json({ message: '没有权限删除此新闻' });
+        return res.status(403).json({ status: 'error', message: '没有权限删除此新闻' });
       }
 
       await news.deleteOne();
 
-      res.json({ message: '新闻删除成功' });
+      res.json({ status: 'success', message: '新闻删除成功' });
     } catch (error) {
-      res.status(500).json({ message: '服务器错误', error });
+      res.status(500).json({ status: 'error', message: '服务器错误', error });
     }
   }
 } 

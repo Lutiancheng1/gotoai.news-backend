@@ -1,27 +1,96 @@
 import { body } from 'express-validator';
 
-export const newsValidation = [
+export const createNewsValidation = [
   body('title')
     .trim()
+    .notEmpty()
+    .withMessage('新闻标题不能为空')
     .isLength({ min: 2, max: 100 })
-    .withMessage('标题长度必须在2-100个字符之间'),
+    .withMessage('新闻标题长度应在2-100字符之间'),
+  
   body('content')
     .trim()
     .notEmpty()
-    .withMessage('内容不能为空'),
-  body('summary')
-    .trim()
-    .isLength({ min: 10, max: 300 })
-    .withMessage('摘要长度必须在10-300个字符之间'),
+    .withMessage('新闻内容不能为空')
+    .isLength({ min: 10 })
+    .withMessage('新闻内容至少需要10个字符'),
+  
   body('category')
     .trim()
     .notEmpty()
-    .withMessage('分类不能为空'),
-  body('tags')
-    .isArray()
-    .withMessage('标签必须是数组格式'),
+    .withMessage('新闻分类不能为空')
+    .isLength({ max: 50 })
+    .withMessage('新闻分类长度不能超过50字符'),
+  
   body('status')
     .optional()
     .isIn(['draft', 'published'])
-    .withMessage('状态值无效'),
+    .withMessage('新闻状态必须是 draft 或 published'),
+  
+  body('tags')
+    .optional()
+    .isArray()
+    .withMessage('标签必须是数组格式'),
+  
+  body('tags.*')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('标签不能为空')
+    .isLength({ max: 20 })
+    .withMessage('单个标签不能超过20字符'),
+  
+  body('coverImage')
+    .optional()
+    .isURL()
+    .withMessage('封面图片必须是有效的URL地址'),
+];
+
+export const updateNewsValidation = [
+  body('title')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('新闻标题不能为空')
+    .isLength({ min: 2, max: 100 })
+    .withMessage('新闻标题长度应在2-100字符之间'),
+  
+  body('content')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('新闻内容不能为空')
+    .isLength({ min: 10 })
+    .withMessage('新闻内容至少需要10个字符'),
+  
+  body('category')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('新闻分类不能为空')
+    .isLength({ max: 50 })
+    .withMessage('新闻分类长度不能超过50字符'),
+  
+  body('status')
+    .optional()
+    .isIn(['draft', 'published'])
+    .withMessage('新闻状态必须是 draft 或 published'),
+  
+  body('tags')
+    .optional()
+    .isArray()
+    .withMessage('标签必须是数组格式'),
+  
+  body('tags.*')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('标签不能为空')
+    .isLength({ max: 20 })
+    .withMessage('单个标签不能超过20字符'),
+  
+  body('coverImage')
+    .optional()
+    .isURL()
+    .withMessage('封面图片必须是有效的URL地址'),
 ]; 

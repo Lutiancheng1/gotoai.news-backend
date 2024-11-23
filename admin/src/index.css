@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 自定义样式 */
+@layer components {
+  .admin-layout {
+    @apply min-h-screen;
+  }
+
+  .admin-header {
+    @apply bg-white px-4 flex justify-end items-center;
+  }
+
+  .admin-content {
+    @apply m-4 p-6 bg-white rounded-lg min-h-[280px];
+  }
+
+  .admin-logo {
+    @apply h-16 px-4 text-white text-lg font-bold flex items-center justify-center;
+  }
+
+  .admin-user-button {
+    @apply h-16 flex items-center;
+  }
+}

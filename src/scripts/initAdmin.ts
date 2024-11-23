@@ -15,15 +15,15 @@ const initAdmin = async () => {
   try {
     // 检查是否已经连接
     if (mongoose.connection.readyState === 1) {
-      logger.info('Using existing MongoDB connection');
+      logger.info('Using existing MongoDB connection ✅');
     } else {
-      logger.info('Creating new MongoDB connection');
+      logger.info('Creating new MongoDB connection ✅');
       await mongoose.connect(mongoUri);
     }
 
     const existingAdmin = await User.findOne({ role: 'admin' });
     if (existingAdmin) {
-      logger.info('Admin account already exists');
+      logger.info('Admin account already exists ✅');
       return;
     }
 
@@ -39,7 +39,7 @@ const initAdmin = async () => {
     logger.info('Admin account created successfully');
 
   } catch (error) {
-    logger.error('Error creating admin account:', error);
+    logger.error('Error creating admin account: ❌', error);
     // 不要在这里退出进程，让应用继续运行
   }
 };

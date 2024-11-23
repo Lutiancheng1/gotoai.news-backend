@@ -4,13 +4,20 @@ export interface INews extends Document {
   title: string;
   content: string;
   summary: string;
-  cover: string;
+  cover: typeof coverSchema;
   category: string;
-  tags: string[];
   author: mongoose.Types.ObjectId;
   status: 'draft' | 'published';
   viewCount: number;
 }
+const coverSchema =  new Schema({
+  userId: { type: String, required: true },
+  originalName: { type: String, required: true },
+  size: { type: Number, required: true },
+  mimeType: { type: String, required: true },
+  path: { type: String, required: true },
+  url: { type: String, required: true }
+}, { timestamps: true }); 
 
 const newsSchema = new Schema(
   {
@@ -22,20 +29,12 @@ const newsSchema = new Schema(
       type: String,
       required: true,
     },
-    summary: {
-      type: String,
-      required: true,
-    },
-    cover: {
-      type: String,
-    },
+    cover: coverSchema,
+    summary: String,
     category: {
       type: String,
       required: true,
     },
-    tags: [{
-      type: String,
-    }],
     author: {
       type: Schema.Types.ObjectId,
       ref: 'User',

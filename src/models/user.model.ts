@@ -1,12 +1,15 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Types } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 export interface IUser extends Document {
+  _id: Types.ObjectId;
   username: string;
   email: string;
   password: string;
-  role: 'admin' | 'editor';
+  role: 'admin' | 'editor' | 'user';
+  status: 'active' | 'inactive';
   comparePassword(candidatePassword: string): Promise<boolean>;
+  toPublicJSON(): Omit<IUser, 'password'>;
 }
 
 const userSchema = new Schema(
@@ -27,8 +30,13 @@ const userSchema = new Schema(
     },
     role: {
       type: String,
-      enum: ['admin', 'editor'],
-      default: 'editor',
+      enum: ['admin', 'editor', 'user'],
+      default: 'user',
+    },
+    status: {
+      type: String,
+      enum: ['active', 'inactive'],
+      default: 'active',
     },
   },
   { timestamps: true }
@@ -44,6 +52,11 @@ userSchema.pre('save', async function (next) {
 
 userSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
   return bcrypt.compare(candidatePassword, this.password);
+};
+
+userSchema.methods.toPublicJSON = function() {
+  const { password, ...userObject } = this.toObject();
+  return userObject;
 };
 
 export default mongoose.model<IUser>('User', userSchema); 

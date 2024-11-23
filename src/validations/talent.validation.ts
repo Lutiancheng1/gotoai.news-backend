@@ -1,61 +1,146 @@
 import { body } from 'express-validator';
 
-export const talentValidation = [
+export const createTalentValidation = [
   body('name')
     .trim()
+    .notEmpty()
+    .withMessage('姓名不能为空')
     .isLength({ min: 2, max: 50 })
-    .withMessage('姓名长度必须在2-50个字符之间'),
-  body('title')
+    .withMessage('姓名长度应在2-50字符之间'),
+  
+  body('position')
     .trim()
     .notEmpty()
-    .withMessage('职位不能为空'),
+    .withMessage('职位不能为空')
+    .isLength({ min: 2, max: 100 })
+    .withMessage('职位长度应在2-100字符之间'),
+  
   body('summary')
     .trim()
-    .isLength({ min: 10, max: 500 })
-    .withMessage('简介长度必须在10-500个字符之间'),
+    .notEmpty()
+    .withMessage('个人简介不能为空')
+    .isLength({ min: 10, max: 1000 })
+    .withMessage('个人简介长度应在10-1000字符之间'),
+  
   body('skills')
-    .isArray()
-    .withMessage('技能必须是数组格式'),
-  body('experience')
-    .isArray()
-    .withMessage('工作经验必须是数组格式'),
-  body('experience.*.company')
+    .custom((value) => {
+      let skillsArray: string[];
+      
+      if (typeof value === 'string') {
+        skillsArray = value.split(',').map(skill => skill.trim()).filter(Boolean);
+      } else if (Array.isArray(value)) {
+        skillsArray = value;
+      } else {
+        throw new Error('技能必须是数组或逗号分隔的字符串');
+      }
+
+      if (!skillsArray.length) {
+        throw new Error('至少需要一个技能');
+      }
+
+      return true;
+    }),
+  
+  body('skills.*')
     .trim()
     .notEmpty()
-    .withMessage('公司名称不能为空'),
-  body('experience.*.position')
+    .withMessage('技能不能为空')
+    .isLength({ max: 50 })
+    .withMessage('单个技能长度不能超过50字符'),
+  
+  body('workExperience')
     .trim()
     .notEmpty()
-    .withMessage('职位不能为空'),
-  body('experience.*.duration')
-    .trim()
-    .notEmpty()
-    .withMessage('工作时间不能为空'),
+    .withMessage('工作经验不能为空')
+    .isLength({ max: 2000 })
+    .withMessage('工作经验长度不能超过2000字符'),
+  
   body('education')
-    .isArray()
-    .withMessage('教育经历必须是数组格式'),
-  body('education.*.school')
     .trim()
     .notEmpty()
-    .withMessage('学校名称不能为空'),
-  body('education.*.degree')
+    .withMessage('教育经历不能为空')
+    .isLength({ max: 1000 })
+    .withMessage('教育经历长度不能超过1000字符'),
+  
+  body('contact')
     .trim()
     .notEmpty()
-    .withMessage('学位不能为空'),
-  body('contact.email')
-    .trim()
-    .isEmail()
-    .withMessage('请输入有效的邮箱地址'),
+    .withMessage('联系方式不能为空')
+    .isLength({ max: 500 })
+    .withMessage('联系方式长度不能超过500字符'),
+  
+  body('status')
+    .optional()
+    .isIn(['available', 'unavailable'])
+    .withMessage('状态必须是 available 或 unavailable'),
 ];
 
-export const talentUpdateValidation = [
-  ...talentValidation,
+export const updateTalentValidation = [
+  body('name')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('姓名不能为空')
+    .isLength({ min: 2, max: 50 })
+    .withMessage('姓名长度应在2-50字符之间'),
+  
+  body('position')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('职位不能为空')
+    .isLength({ min: 2, max: 100 })
+    .withMessage('职位长度应在2-100字符之间'),
+  
+  body('summary')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('个人简介不能为空')
+    .isLength({ min: 10, max: 1000 })
+    .withMessage('个人简介长度应在10-1000字符之间'),
+  
+  body('skills')
+    .optional()
+    .isArray()
+    .withMessage('技能必须是数组格式')
+    .notEmpty()
+    .withMessage('至少需要一个技能'),
+  
+  body('skills.*')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('技能不能为空')
+    .isLength({ max: 50 })
+    .withMessage('单个技能长度不能超过50字符'),
+  
+  body('workExperience')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('工作经验不能为空')
+    .isLength({ max: 2000 })
+    .withMessage('工作经验长度不能超过2000字符'),
+  
+  body('education')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('教育经历不能为空')
+    .isLength({ max: 1000 })
+    .withMessage('教育经历长度不能超过1000字符'),
+  
+  body('contact')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('联系方式不能为空')
+    .isLength({ max: 500 })
+    .withMessage('联系方式长度不能超过500字符'),
+  
   body('status')
     .optional()
     .isIn(['available', 'not-available'])
-    .withMessage('无效的状态值'),
-  body('featured')
-    .optional()
-    .isBoolean()
-    .withMessage('推荐状态必须是布尔值'),
-]; 
+    .withMessage('状态必须是 available 或 not-available'),
+];

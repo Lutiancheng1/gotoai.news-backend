@@ -1,19 +1,65 @@
 services:
   mongodb:
     image: mongo:latest
-    ports:
-      - "27017:27017"
+    restart: always
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
     volumes:
       - mongodb_data:/data/db
+    networks:
+      - app-network
 
   redis:
-    image: redis:latest
+    image: redis:alpine
+    restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+
+  backend:
+    build: .
+    restart: always
+    environment:
+      - MONGODB_URI=mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongodb:27017/talent-platform?authSource=admin
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+      - ADMIN_USERNAME=${ADMIN_USERNAME}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - NODE_ENV=${NODE_ENV}
+      - PORT=${PORT}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - UPLOAD_PATH=${UPLOAD_PATH}
+    volumes:
+      - ./uploads:/app/uploads
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - app-network
+
+  frontend:
+    build: 
+      context: ./admin
+      dockerfile: Dockerfile
+    restart: always
     ports:
-      - "6379:6379"
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
 
 volumes:
   mongodb_data:
-  redis-data: 
+  redis_data:
+
+networks:
+  app-network:
+    driver: bridge

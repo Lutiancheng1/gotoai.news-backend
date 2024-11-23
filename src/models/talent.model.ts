@@ -2,31 +2,26 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface ITalent extends Document {
   name: string;
-  title: string;
-  avatar: string;
+  position: string;
+  avatar: typeof avatarSchema;
   summary: string;
   skills: string[];
-  experience: {
-    company: string;
-    position: string;
-    duration: string;
-    description: string;
-  }[];
-  education: {
-    school: string;
-    degree: string;
-    field: string;
-    year: string;
-  }[];
-  contact: {
-    email: string;
-    phone?: string;
-    linkedin?: string;
-  };
   status: 'available' | 'not-available';
+  workExperience: string;
+  education: string;
+  contact: string;
   recommendedBy: mongoose.Types.ObjectId;
   featured: boolean;
 }
+
+const avatarSchema = new Schema({
+  userId: { type: String, required: true },
+  originalName: { type: String, required: true },
+  size: { type: Number, required: true },
+  mimeType: { type: String, required: true },
+  path: { type: String, required: true },
+  url: { type: String, required: true }
+}, { timestamps: true });
 
 const talentSchema = new Schema(
   {
@@ -35,12 +30,12 @@ const talentSchema = new Schema(
       required: true,
       trim: true,
     },
-    title: {
+    position: {
       type: String,
       required: true,
     },
     avatar: {
-      type: String,
+      type: avatarSchema,
     },
     summary: {
       type: String,
@@ -50,49 +45,17 @@ const talentSchema = new Schema(
       type: String,
       required: true,
     }],
-    experience: [{
-      company: {
-        type: String,
-        required: true,
-      },
-      position: {
-        type: String,
-        required: true,
-      },
-      duration: {
-        type: String,
-        required: true,
-      },
-      description: {
-        type: String,
-        required: true,
-      },
-    }],
-    education: [{
-      school: {
-        type: String,
-        required: true,
-      },
-      degree: {
-        type: String,
-        required: true,
-      },
-      field: {
-        type: String,
-        required: true,
-      },
-      year: {
-        type: String,
-        required: true,
-      },
-    }],
+    workExperience: {
+      type: String,
+      required: true,
+    },
+    education: {
+      type: String,
+      required: true,
+    },
     contact: {
-      email: {
-        type: String,
-        required: true,
-      },
-      phone: String,
-      linkedin: String,
+      type: String,
+      required: true,
     },
     status: {
       type: String,

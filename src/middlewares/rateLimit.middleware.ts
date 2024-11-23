@@ -3,7 +3,7 @@ import RedisStore from 'rate-limit-redis';
 import redis from '../config/redis';
 
 // 白名单配置
-const whitelist = ['127.0.0.1', 'localhost'];
+const whitelist = ['127.0.0.1', 'localhost', '::1', '::ffff:127.0.0.1'];
 
 // 创建 RedisStore 实例
 const createRedisStore = (prefix: string) => new RedisStore({
@@ -17,10 +17,11 @@ const createRedisStore = (prefix: string) => new RedisStore({
 // API 通用限流
 export const apiLimiter = rateLimit({
   store: createRedisStore('rate-limit-api:'),
-  windowMs: 15 * 60 * 1000, // 15分钟
-  max: 100, // 限制每个IP 15分钟内最多100个请求
+  windowMs: 1 * 60 * 1000, // 1分钟
+  max: 30, // 限制每个IP 1分钟内最多30个请求
   skip: (req) => {
     const clientIp = req.ip || '';
+    // console.log('Current IP:', clientIp);
     return whitelist.includes(clientIp);
   },
   message: {

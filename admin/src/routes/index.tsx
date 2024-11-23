@@ -1,30 +1,33 @@
-import React from 'react';
-import { Navigate, RouteObject } from 'react-router-dom';
-import LoginPage from '../pages/login';
-import Dashboard from '../pages/dashboard';
-import UsersPage from '../pages/users';
-import NewsPage from '../pages/news';
-import TalentsPage from '../pages/talents';
-import SettingsPage from '../pages/settings';
-import Layout from '../components/Layout';
-import AuthGuard from '../components/AuthGuard';
+import React from 'react'
+import { Navigate, RouteObject } from 'react-router-dom'
+import LoginPage from '@/pages/login'
+import Dashboard from '@/pages/dashboard'
+import UsersPage from '@/pages/users'
+import NewsPage from '@/pages/news'
+import TalentsPage from '@/pages/talents'
+import SettingsPage from '@/pages/settings'
+import CategoryPage from '@/pages/category'
+import AppLayout from '@/components/Layout'
+import AuthGuard from '@/components/AuthGuard'
+import Unauthorized from '@/pages/Unauthorized'
+import FilesPage from '@/pages/settings/files'
 
 export const routes: RouteObject[] = [
   {
     path: '/login',
-    element: <LoginPage />,
+    element: <LoginPage />
   },
   {
     path: '/',
     element: (
       <AuthGuard>
-        <Layout />
+        <AppLayout />
       </AuthGuard>
     ),
     children: [
       {
         path: 'dashboard',
-        element: <Dashboard />,
+        element: <Dashboard />
       },
       {
         path: 'users',
@@ -32,32 +35,40 @@ export const routes: RouteObject[] = [
           <AuthGuard requiredRole="admin">
             <UsersPage />
           </AuthGuard>
-        ),
+        )
       },
       {
         path: 'news',
-        element: <NewsPage />,
+        element: <NewsPage />
       },
       {
         path: 'talents',
-        element: <TalentsPage />,
+        element: <TalentsPage />
       },
       {
         path: 'settings',
-        element: <SettingsPage />,
+        element: <SettingsPage />
+      },
+      {
+        path: 'category',
+        element: <CategoryPage />
+      },
+      {
+        path: 'files',
+        element: <FilesPage />
       },
       {
         path: '',
-        element: <Navigate to="/dashboard" replace />,
-      },
-    ],
+        element: <Navigate to="/dashboard" replace />
+      }
+    ]
   },
   {
     path: '/unauthorized',
-    element: <div>Unauthorized Access</div>,
+    element: <Unauthorized />
   },
   {
     path: '*',
-    element: <Navigate to="/" replace />,
-  },
-]; 
+    element: <Navigate to="/" replace />
+  }
+]

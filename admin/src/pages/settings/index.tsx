@@ -1,56 +1,53 @@
-import React from 'react';
-import { Form, Input, Button, Card, message } from 'antd';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../store';
-import { setCredentials } from '../../store/slices/authSlice';
-import axiosInstance from '../../utils/axios';
+import React from 'react'
+import { Form, Input, Button, Card, message } from 'antd'
+import { useDispatch, useSelector } from 'react-redux'
+import { RootState } from '@/store'
+import { setCredentials } from '@/store/slices/authSlice'
+import axiosInstance from '@/utils/axios'
 
 interface ProfileForm {
-  username: string;
-  email: string;
-  currentPassword: string;
-  newPassword?: string;
-  confirmPassword?: string;
+  username: string
+  email: string
+  currentPassword: string
+  newPassword?: string
+  confirmPassword?: string
 }
 
 const SettingsPage: React.FC = () => {
-  const dispatch = useDispatch();
-  const user = useSelector((state: RootState) => state.auth.user);
-  const [form] = Form.useForm();
+  const dispatch = useDispatch()
+  const user = useSelector((state: RootState) => state.auth.user)
+  const [form] = Form.useForm()
 
   const onFinish = async (values: ProfileForm) => {
     try {
       if (values.newPassword && values.newPassword !== values.confirmPassword) {
-        message.error('两次输入的密码不一致');
-        return;
+        message.error('两次输入的密码不一致')
+        return
       }
 
-      const response = await axiosInstance.put('/auth/profile', values);
-      dispatch(setCredentials(response.data));
-      message.success('个人信息更新成功');
+      const response = await axiosInstance.put('/auth/profile', values)
+      dispatch(setCredentials(response.data))
+      message.success('个人信息更新成功')
     } catch (error) {
-      message.error('更新失败，请检查当前密码是否正确');
+      message.error('更新失败，请检查当前密码是否正确')
     }
-  };
+  }
 
   return (
-    <div>
-      <h2>个人设置</h2>
-      <Card style={{ maxWidth: 600, margin: '0 auto' }}>
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold mb-6">个人设置</h2>
+      <Card className="max-w-2xl mx-auto">
         <Form
           form={form}
           layout="vertical"
           initialValues={{
             username: user?.username,
-            email: user?.email,
+            email: user?.email
           }}
           onFinish={onFinish}
+          className="space-y-4"
         >
-          <Form.Item
-            name="username"
-            label="用户名"
-            rules={[{ required: true, message: '请输入用户名' }]}
-          >
+          <Form.Item name="username" label="用户名" rules={[{ required: true, message: '请输入用户名' }]}>
             <Input />
           </Form.Item>
 
@@ -65,18 +62,11 @@ const SettingsPage: React.FC = () => {
             <Input />
           </Form.Item>
 
-          <Form.Item
-            name="currentPassword"
-            label="当前密码"
-            rules={[{ required: true, message: '请输入当前密码' }]}
-          >
+          <Form.Item name="currentPassword" label="当前密码" rules={[{ required: true, message: '请输入当前密码' }]}>
             <Input.Password />
           </Form.Item>
 
-          <Form.Item
-            name="newPassword"
-            label="新密码"
-          >
+          <Form.Item name="newPassword" label="新密码">
             <Input.Password />
           </Form.Item>
 
@@ -88,25 +78,25 @@ const SettingsPage: React.FC = () => {
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   if (!value || getFieldValue('newPassword') === value) {
-                    return Promise.resolve();
+                    return Promise.resolve()
                   }
-                  return Promise.reject(new Error('两次输入的密码不一致'));
-                },
-              }),
+                  return Promise.reject(new Error('两次输入的密码不一致'))
+                }
+              })
             ]}
           >
             <Input.Password />
           </Form.Item>
 
-          <Form.Item>
-            <Button type="primary" htmlType="submit">
+          <Form.Item className="mt-6">
+            <Button type="primary" htmlType="submit" className="w-full">
               保存修改
             </Button>
           </Form.Item>
         </Form>
       </Card>
     </div>
-  );
-};
+  )
+}
 
-export default SettingsPage; 
+export default SettingsPage
