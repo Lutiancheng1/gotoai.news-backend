@@ -3,7 +3,7 @@ import { logger } from '../utils/logger';
 
 const redis = new IORedis({
   host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6380'),  // 修改默认端口为6380
+  port: parseInt(process.env.REDIS_PORT || '6388'),  // 修改默认端口为6388
   password: process.env.REDIS_PASSWORD,
   retryStrategy: (times: number) => {
     const delay = Math.min(times * 50, 2000);

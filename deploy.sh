@@ -10,9 +10,9 @@ check_port() {
 }
 
 # 检查必要端口
-check_port 3001
+check_port 3002
 check_port 5002
-check_port 6380
+check_port 6388
 
 # 确保脚本在错误时停止
 set -e
