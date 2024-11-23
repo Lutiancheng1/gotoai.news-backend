@@ -3,6 +3,10 @@ import User from '../models/user.model';
 import { AppError } from '../middlewares/error.middleware';
 import { logger } from '../utils/logger';
 import { AuthRequest } from '../types';
+import jwt from 'jsonwebtoken';
+import News from '../models/news.model';
+import Category from '../models/category.model';
+import Talent from '../models/talent.model';
 
 export class UsersController {
   // 获取所有用户列表
@@ -75,7 +79,7 @@ export class UsersController {
   // 更新用户
   static async updateUser(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { username, email, role } = req.body;
+      const { username, email, role, status } = req.body;
       const currentUser = await User.findById(req.user?.userId);
       const targetUser = await User.findById(req.params.id);
 
@@ -83,14 +87,35 @@ export class UsersController {
         return next(new AppError('用户不存在', 404));
       }
 
+      // 特别保护超级管理员
+      if (targetUser.username === 'admin' && targetUser.role === 'admin') {
+        return next(new AppError('不能修改超级管理员的信息', 403));
+      }
+
       // 构建更新对象
       const updateData: any = {};
       if (username) updateData.username = username;
       if (email) updateData.email = email;
 
-      // 只有超级管理员可以修改角色
-      if (role && currentUser?.username === 'admin') {
-        updateData.role = role;
+      // 角色修改逻辑
+      if (role) {
+        // 超级管理员可以修改任何人的角色
+        if (currentUser?.username === 'admin') {
+          updateData.role = role;
+        } 
+        // 普通管理员只能修改其他用户的角色
+        else if (currentUser?.role === 'admin' && currentUser._id.toString() !== targetUser._id.toString()) {
+          updateData.role = role;
+        }
+      }
+
+      // 状态修改逻辑
+      if (status) {
+        // 不能修改自己的状态
+        if (currentUser?._id.toString() === targetUser._id.toString()) {
+          return next(new AppError('不能修改自己的状态', 403));
+        }
+        updateData.status = status;
       }
 
       const updatedUser = await User.findByIdAndUpdate(
@@ -99,10 +124,27 @@ export class UsersController {
         { new: true, runValidators: true }
       ).select('-password');
 
-      res.status(200).json({
-        status: 'success',
-        data: { user: updatedUser }
-      });
+      // 如果修改的是当前用户的角色，生成新�� token
+      if (currentUser?._id.toString() === targetUser._id.toString() && role) {
+        const token = jwt.sign(
+          { userId: updatedUser!._id, role: updatedUser!.role },
+          process.env.JWT_SECRET!,
+          { expiresIn: process.env.JWT_EXPIRES_IN }
+        );
+
+        res.status(200).json({
+          status: 'success',
+          data: { 
+            user: updatedUser,
+            token // 返回新的 token
+          }
+        });
+      } else {
+        res.status(200).json({
+          status: 'success',
+          data: { user: updatedUser }
+        });
+      }
     } catch (error) {
       logger.error('Error updating user:', error);
       next(new AppError('更新用户信息失败', 500));
@@ -110,31 +152,65 @@ export class UsersController {
   }
 
   // 删除用户
-  static async deleteUser(req: Request, res: Response, next: NextFunction) {
+  static async deleteUser(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const user = await User.findById(req.params.id);
+      const currentUser = await User.findById(req.user?.userId);
       
-      if (!user) {
+      if (!user || !currentUser) {
         return next(new AppError('用户不存在', 404));
       }
 
       // 不允许删除管理员账户
-      if (user.role === 'admin') {
-        return next(new AppError('不能删除管理员账户', 403));
+      if (user.role === 'admin' && user.username === 'admin') {
+        return next(new AppError('不能删除超级管理员账户', 403));
       }
 
+      // 记录数据转移前的统计
+      const newsCount = await News.countDocuments({ author: user._id });
+      const categoryCount = await Category.countDocuments({ createdBy: user._id });
+      const talentCount = await Talent.countDocuments({ createdBy: user._id });
+
+      // 更新所有关联数据
+      await Promise.all([
+        News.updateMany(
+          { author: user._id },
+          { author: currentUser._id, updatedBy: currentUser._id }
+        ),
+        Category.updateMany(
+          { createdBy: user._id },
+          { createdBy: currentUser._id, updatedBy: currentUser._id }
+        ),
+        Talent.updateMany(
+          { createdBy: user._id },
+          { createdBy: currentUser._id, updatedBy: currentUser._id }
+        )
+      ]);
+
+      // 记录操作日志
+      logger.info(`用户删除操作 - 执行者: ${currentUser.username}(${currentUser._id}), 被删除用户: ${user.username}(${user._id})`);
+      logger.info(`数据转移统计 - 新闻: ${newsCount}条, 分类: ${categoryCount}个, 人才信息: ${talentCount}条`);
+
+      // 删除用户
       await User.findByIdAndDelete(req.params.id);
 
       res.status(200).json({
         status: 'success',
-        message: '用户删除成功'
+        message: '用户删除成功',
+        data: {
+          transferStats: {
+            news: newsCount,
+            categories: categoryCount,
+            talents: talentCount
+          }
+        }
       });
     } catch (error) {
-      logger.error('Error deleting user:', error);
+      logger.error('删除用户失败:', error);
       next(new AppError('删除用户失败', 500));
     }
   }
-
+  // 创建用户
   static async createUser(req: Request, res: Response, next: NextFunction) {
     try {
       const { username, email, password, role } = req.body;
@@ -166,19 +242,29 @@ export class UsersController {
       next(new AppError('创建用户失败', 500));
     }
   }
-
+  
   static async toggleUserStatus(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const user = await User.findById(req.params.id);
+      const currentUser = await User.findById(req.user?.userId);
       
       if (!user) {
         return next(new AppError('用户不存在', 404));
       }
 
+      // 检查是否是超级管理员
       if (user.role === 'admin' && user.username === 'admin') {
         return res.status(403).json({
           status: 'error',
           message: '不能修改超级管理员状态'
+        });
+      }
+
+      // 检查是否在停用自己的账户
+      if (currentUser?._id.toString() === user._id.toString()) {
+        return res.status(403).json({
+          status: 'error',
+          message: '不能停用自己的账户'
         });
       }
 

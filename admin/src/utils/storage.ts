@@ -101,6 +101,12 @@ export const setStoredAuth = (auth: AuthStorage): void => {
   }
 };
 
+// 只清除token 和用户信息
+export const clearTokenAndUser = (): void => {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+};
+
 // 清除所有认证信息
 export const clearStoredAuth = (): void => {
   localStorage.removeItem(TOKEN_KEY);

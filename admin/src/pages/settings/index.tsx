@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '@/store'
 import { setCredentials } from '@/store/slices/authSlice'
 import axiosInstance from '@/utils/axios'
+import { useNavigate } from 'react-router-dom'
 
 interface ProfileForm {
   username: string
@@ -12,12 +13,26 @@ interface ProfileForm {
   newPassword?: string
   confirmPassword?: string
 }
+interface UpdateProfileSuccess {
+  status: string
+  message: string
+  data: {
+    user: {
+      id: string
+      username: string
+      email: string
+      role: 'admin' | 'user'
+      status: 'active' | 'inactive'
+    }
+    token: string
+  }
+}
 
 const SettingsPage: React.FC = () => {
   const dispatch = useDispatch()
   const user = useSelector((state: RootState) => state.auth.user)
   const [form] = Form.useForm()
-
+  const navigate = useNavigate()
   const onFinish = async (values: ProfileForm) => {
     try {
       if (values.newPassword && values.newPassword !== values.confirmPassword) {
@@ -25,11 +40,14 @@ const SettingsPage: React.FC = () => {
         return
       }
 
-      const response = await axiosInstance.put('/auth/profile', values)
-      dispatch(setCredentials(response.data))
+      const response: UpdateProfileSuccess = await axiosInstance.put('/auth/update-profile', values)
+
+      dispatch(setCredentials({ token: response.data.token, user: response.data.user }))
+
       message.success('个人信息更新成功')
-    } catch (error) {
-      message.error('更新失败，请检查当前密码是否正确')
+      navigate('/dashboard')
+    } catch (error: any) {
+      message.error(error.response.data.message || '更新失败，请检查当前密码是否正确')
     }
   }
 
@@ -66,7 +84,7 @@ const SettingsPage: React.FC = () => {
             <Input.Password />
           </Form.Item>
 
-          <Form.Item name="newPassword" label="新密码">
+          <Form.Item name="newPassword" label="新密码" rules={[{ required: true, message: '请输入新密码' }]}>
             <Input.Password />
           </Form.Item>
 

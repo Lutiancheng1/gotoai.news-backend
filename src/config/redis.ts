@@ -1,14 +1,21 @@
 import IORedis from 'ioredis';
 import { logger } from '../utils/logger';
 
+const isDevelopment = process.env.NODE_ENV === 'development';
+
 const redis = new IORedis({
   host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6388'),  // 修改默认端口为6388
-  password: process.env.REDIS_PASSWORD,
+  port: parseInt(process.env.REDIS_PORT || '6379'),
+  password: isDevelopment ? undefined : process.env.REDIS_PASSWORD,
+  maxRetriesPerRequest: 3,
   retryStrategy: (times: number) => {
-    const delay = Math.min(times * 50, 2000);
+    if (times > 3) {
+      logger.error('Redis connection failed after 3 retries');
+      return null;
+    }
+    const delay = Math.min(times * 200, 2000);
     return delay;
-  },
+  }
 });
 
 redis.on('error', (error: Error) => {

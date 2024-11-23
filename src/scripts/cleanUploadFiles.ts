@@ -1,6 +1,5 @@
- import mongoose from 'mongoose';
+import mongoose from 'mongoose';
 import fs from 'fs';
-import path from 'path';
 import File from '../models/file.model';
 import News from '../models/news.model';
 import Talent from '../models/talent.model';

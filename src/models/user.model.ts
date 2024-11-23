@@ -6,7 +6,7 @@ export interface IUser extends Document {
   username: string;
   email: string;
   password: string;
-  role: 'admin' | 'editor' | 'user';
+  role: 'admin' | 'user';
   status: 'active' | 'inactive';
   comparePassword(candidatePassword: string): Promise<boolean>;
   toPublicJSON(): Omit<IUser, 'password'>;
@@ -30,7 +30,7 @@ const userSchema = new Schema(
     },
     role: {
       type: String,
-      enum: ['admin', 'editor', 'user'],
+      enum: ['admin', 'user'],
       default: 'user',
     },
     status: {

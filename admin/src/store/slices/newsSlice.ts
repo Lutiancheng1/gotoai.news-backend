@@ -206,6 +206,13 @@ const newsSlice = createSlice({
           );
           if (index !== -1) {
             state.categories[index] = action.payload.data.category;
+            // 触发新闻列表刷新
+            state.news = state.news.map(news => {
+              if (news.category === action.payload.data?.category.name) {
+                return { ...news, category: action.payload.data.category.name };
+              }
+              return news;
+            });
           }
         }
       })

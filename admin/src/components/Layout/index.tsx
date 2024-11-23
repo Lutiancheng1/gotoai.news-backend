@@ -1,29 +1,23 @@
 import React from 'react'
-import { Layout, Menu, Dropdown, Button } from 'antd'
+import { Layout, Menu } from 'antd'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { useSelector, useDispatch } from 'react-redux'
-import { LogoutOutlined, UserOutlined, DashboardOutlined, TeamOutlined, FileTextOutlined, UserSwitchOutlined, SettingOutlined } from '@ant-design/icons'
+import { useSelector } from 'react-redux'
+import { DashboardOutlined, TeamOutlined, FileTextOutlined, UserSwitchOutlined, SettingOutlined } from '@ant-design/icons'
 import { RootState } from '@/store'
-import { logout } from '@/store/slices/authSlice'
 import type { MenuProps } from 'antd'
+import HeaderComponent from '../Header'
 
-const { Header, Sider, Content } = Layout
+const { Sider, Content } = Layout
 
 const AppLayout: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const dispatch = useDispatch()
   const { user } = useSelector((state: RootState) => state.auth)
 
   const selectedKey = location.pathname.split('/')[1] || 'dashboard'
 
   const handleMenuClick = (info: { key: string }) => {
     navigate(info.key)
-  }
-
-  const handleLogout = () => {
-    dispatch(logout())
-    navigate('/login')
   }
 
   const menuItems: MenuProps['items'] = [
@@ -65,24 +59,6 @@ const AppLayout: React.FC = () => {
     }
   ]
 
-  const userMenuItems: MenuProps['items'] = [
-    {
-      key: 'settings',
-      icon: <UserOutlined />,
-      label: '个人设置',
-      onClick: () => navigate('/settings')
-    },
-    {
-      type: 'divider'
-    },
-    {
-      key: 'logout',
-      icon: <LogoutOutlined />,
-      label: '退出登录',
-      onClick: handleLogout
-    }
-  ]
-
   return (
     <Layout className="min-h-screen">
       <Sider>
@@ -90,13 +66,7 @@ const AppLayout: React.FC = () => {
         <Menu theme="dark" mode="inline" selectedKeys={[selectedKey]} onClick={handleMenuClick} items={menuItems} />
       </Sider>
       <Layout>
-        <Header className="bg-white px-4 flex justify-end items-center">
-          <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-            <Button type="link" icon={<UserOutlined />} className="h-16 flex items-center">
-              {user?.username || 'User'}
-            </Button>
-          </Dropdown>
-        </Header>
+        <HeaderComponent />
         <Content className="m-4 p-6 bg-white h-[calc(100vh-96px)] overflow-hidden no-scrollbar rounded-lg min-h-[280px]">
           <Outlet />
         </Content>

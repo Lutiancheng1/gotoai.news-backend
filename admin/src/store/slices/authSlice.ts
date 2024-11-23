@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { UserLoginData } from '@/types';
-import { getStoredAuth, setStoredAuth, clearStoredAuth, isAuthenticated } from '@/utils/storage';
+import { getStoredAuth, setStoredAuth, isAuthenticated, clearTokenAndUser } from '@/utils/storage';
 
 interface AuthState {
   token: string | null;
@@ -33,9 +33,9 @@ const authSlice = createSlice({
       state.token = null;
       state.user = null;
       state.isAuthenticated = false;
-      clearStoredAuth();
-    },
-  },
+      clearTokenAndUser();
+    }
+  }
 });
 
 export const { setCredentials, logout } = authSlice.actions;

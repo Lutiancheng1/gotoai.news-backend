@@ -187,7 +187,7 @@ const CategoryPage: React.FC = () => {
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item name="name" label="分类名称" rules={[{ required: true, message: '请输入分类名称' }]}>
-            <Input />
+            <Input placeholder="请输入分类名称" />
           </Form.Item>
           <Form.Item className="mb-0 flex justify-end">
             <Button type="primary" htmlType="submit" className="bg-blue-600">

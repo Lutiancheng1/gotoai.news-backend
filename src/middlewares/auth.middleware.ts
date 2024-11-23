@@ -73,17 +73,31 @@ export const canModifyUser: RequestHandler = async (req: AuthRequest, res: Respo
       return;
     }
 
+    if (targetUser.username === 'admin') {
+      res.status(403).json({ message: '不能修改超级管理员' });
+      return;
+    }
+
     if (currentUser.username === 'admin') {
       next();
       return;
     }
 
-    if (currentUser.role === 'admin' && targetUser.role !== 'admin') {
+    if (currentUser._id.toString() === targetUser._id.toString() && req.body.status) {
+      res.status(403).json({ message: '不能修改自己的状态' });
+      return;
+    }
+
+    if (currentUser.role === 'admin' && currentUser._id.toString() !== targetUser._id.toString()) {
       next();
       return;
     }
 
     if (currentUser._id.toString() === targetUser._id.toString()) {
+      if (req.body.role || req.body.status) {
+        res.status(403).json({ message: '不能修改自己的角色或状态' });
+        return;
+      }
       next();
       return;
     }
@@ -130,12 +144,7 @@ export const canModifyCategory: RequestHandler = async (req: AuthRequest, res: R
       return;
     }
 
-    if (currentUser.role === 'admin') {
-      next();
-      return;
-    }
-
-    if (category.createdBy.toString() === currentUser._id.toString()) {
+    if (currentUser.role === 'admin' || category.createdBy.toString() === currentUser._id.toString()) {
       next();
       return;
     }

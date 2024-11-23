@@ -40,6 +40,13 @@ const handleGetDevCredentials: RequestHandler = async (req, res) => {
   }
 };
  
+const handleUpdateProfile: RequestHandler = async (req, res, next) => {
+  try {
+    await AuthController.updateProfile(req, res);
+  } catch (error) {
+    next(error);
+  }
+};
 
 /**
  * @swagger
@@ -136,5 +143,7 @@ if (process.env.NODE_ENV === 'development') {
    */
   router.get('/dev-credentials', handleGetDevCredentials);
 }
+
+router.put('/update-profile', auth, validate(updateProfileValidation), handleUpdateProfile);
 
 export default router; 

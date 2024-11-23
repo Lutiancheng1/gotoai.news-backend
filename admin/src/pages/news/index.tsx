@@ -373,6 +373,10 @@ const NewsPage: React.FC = () => {
                     }}
                     onRemove={handleRemove}
                     maxCount={1}
+                    showUploadList={{
+                      showPreviewIcon: false, // 如果你想要自定义预览，可以显示预览按钮
+                      showRemoveIcon: true
+                    }}
                   >
                     {fileList.length < 1 && '+ 上传封面'}
                   </Upload>

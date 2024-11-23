@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import { setCredentials } from '@/store/slices/authSlice'
 import axiosInstance from '@/utils/axios'
-import { saveCredentials, getStoredCredentials } from '@/utils/storage'
+import { saveCredentials, getStoredCredentials, clearStoredAuth } from '@/utils/storage'
 import { LoginResponse } from '@/types'
 
 const { Text } = Typography
@@ -69,9 +69,11 @@ const LoginPage: React.FC = () => {
 
       console.log(data)
 
-      // 如果勾选了记住密码，保存到本地
+      // 根据记住密码选项决定是否保存凭证
       if (remember) {
         saveCredentials({ email, password })
+      } else {
+        clearStoredAuth() // 清除所有存储的认证信息
       }
 
       dispatch(

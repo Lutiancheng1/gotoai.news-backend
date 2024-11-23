@@ -86,6 +86,7 @@ export interface UserOperationResponse {
   message: string;
   data?: {
     user: User;
+    token?: string;
   };
 }
 

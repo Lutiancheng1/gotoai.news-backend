@@ -71,14 +71,6 @@ export class CategoryController {
   // 创建分类
   static async create(req: AuthRequest, res: Response) {
     try {
-      // 检查权限
-      // if (req.user?.role !== 'admin') {
-      //   return res.status(403).json({ 
-      //     status: 'error',
-      //     message: '只有管理员可以创建分类' 
-      //   });
-      // }
-
       const { name } = req.body;
 
       // 检查分类名是否已存在
@@ -153,11 +145,10 @@ export class CategoryController {
         });
       }
 
-      // 更新所有使用此分类的新闻
-      await News.updateMany(
-        { category: name }
-      );
+      // 先获取旧的分类名
+      const oldCategoryName = category.name;
 
+      // 更新分类
       const updatedCategory = await Category.findByIdAndUpdate(
         req.params.id,
         { 
@@ -166,8 +157,13 @@ export class CategoryController {
         },
         { new: true }
       ).populate('createdBy', 'username')
-     .populate('updatedBy', 'username');
+        .populate('updatedBy', 'username');
 
+      // 更新所有使用此分类的新闻
+      await News.updateMany(
+        { category: oldCategoryName },
+        { category: name }
+      );
 
       res.json({
         status: 'success',
@@ -189,6 +185,7 @@ export class CategoryController {
   static async delete(req: AuthRequest, res: Response) {
     try {
       const category = await Category.findById(req.params.id);
+      const currentUser = await User.findById(req.user?.userId);
       
       if (!category) {
         return res.status(404).json({ 
@@ -197,10 +194,13 @@ export class CategoryController {
         });
       }
 
-      if (req.user?.role !== 'admin') {
+      // 检查权限：管理员可以删除任何分类，普通用户只能删除自己创建的分类
+      if (currentUser?.role !== 'admin' && 
+          currentUser?.username !== 'admin' && 
+          category.createdBy.toString() !== currentUser?._id.toString()) {
         return res.status(403).json({ 
           status: 'error',
-          message: '只有管理员可以删除分类' 
+          message: '没有权限删除此分类' 
         });
       }
 

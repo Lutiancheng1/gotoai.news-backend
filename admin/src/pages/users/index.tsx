@@ -95,14 +95,26 @@ const UsersPage: React.FC = () => {
   // 处理删除用户
   const handleDelete = (id: string) => {
     Modal.confirm({
-      title: '确认删除',
-      content: '确定要删除这个用户吗？',
-      okText: '确定',
+      title: '确认删除用户',
+      content: (
+        <div className="space-y-2">
+          <p>删除此用户后：</p>
+          <ul className="list-none">
+            <li className="text-red-600">该用户创建的所有新闻将转移给您</li>
+            <li className="text-red-600">该用户创建的所有分类将转移给您</li>
+            <li className="text-red-600">该用户创建的所有人才信息将转移给您</li>
+          </ul>
+          <p>确定要继续删除吗？</p>
+        </div>
+      ),
+      okText: '确定删除',
+      okButtonProps: { danger: true },
       cancelText: '取消',
+      width: 500,
       onOk: async () => {
         try {
           await dispatch(deleteUser(id)).unwrap()
-          message.success('删除成功')
+          message.success('用户删除成功，相关数据已转移')
         } catch (error: any) {
           message.error(error.message || '删除失败')
         }

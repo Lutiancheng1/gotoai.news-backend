@@ -34,20 +34,45 @@ export class NewsController {
   }
 
   // 获取新闻列表
-  static async getList(req: AuthRequest, res: Response) {
+  static async getList(req: Request, res: Response) {
     try {
-      const { page = 1, limit = 10, category, status, author } = req.query;
+      const { page = 1, limit = 10, title, category, author, status } = req.query;
       const query: any = {};
-      
-      if (category) query.category = category;
-      if (status) query.status = status;
-      if (author) query.author = author;
+
+      if (title) {
+        query.title = new RegExp(title as string, 'i');
+      }
+      if (category) {
+        query.category = category;
+      }
+      if (author) {
+        // 先通过用户名查找用户
+        const user = await User.findOne({ username: new RegExp(author as string, 'i') });
+        if (user) {
+          query.author = user._id;
+        } else {
+          // 如果找不到用户，返回空结果
+          return res.json({
+            status: 'success',
+            data: {
+              news: [],
+              pagination: {
+                total: 0,
+                page: Number(page),
+                pages: 0
+              }
+            }
+          });
+        }
+      }
+      if (status) {
+        query.status = status;
+      }
 
       const total = await News.countDocuments(query);
       const news = await News.find(query)
         .populate('author', 'username')
-        .populate('cover')
-        .sort('-createdAt')
+        .sort({ createdAt: -1 })
         .skip((Number(page) - 1) * Number(limit))
         .limit(Number(limit));
 
@@ -58,12 +83,16 @@ export class NewsController {
           pagination: {
             total,
             page: Number(page),
-            pages: Math.ceil(total / Number(limit)),
-          },
-        },
+            pages: Math.ceil(total / Number(limit))
+          }
+        }
       });
     } catch (error) {
-      res.status(500).json({ status: 'error', message: '服务器错误', error });
+      res.status(500).json({ 
+        status: 'error', 
+        message: '服务器错误', 
+        error 
+      });
     }
   }
 

@@ -4,13 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "docker:check": "docker ps",
-    "docker:clean": "docker-compose down",
-    "docker:start": "docker-compose up -d",
-    "init:db": "docker-compose down && docker-compose up -d && sleep 3",
-    "start": "ts-node-dev src/app.ts",
+    "docker:dev": "docker-compose -f docker-compose.dev.yml down && docker-compose -f docker-compose.dev.yml up -d",
+    "docker:dev:down": "docker-compose -f docker-compose.dev.yml down",
+    "docker:prod": "docker-compose up -d",
+    "docker:prod:down": "docker-compose down",
+    "start": "NODE_ENV=development ts-node-dev --files -r dotenv/config src/app.ts dotenv_config_path=.env.development",
     "admin:start": "cd admin && npm start",
-    "dev": "npm run init:db && concurrently \"npm run start\" \"npm run admin:start\""
+    "dev": "npm run docker:dev && sleep 10 && concurrently \"npm run start\" \"npm run admin:start\"",
+    "deploy": "chmod +x deploy.sh && ./deploy.sh"
   },
   "keywords": [],
   "author": "",

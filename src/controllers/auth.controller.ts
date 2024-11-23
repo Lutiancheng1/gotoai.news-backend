@@ -57,9 +57,103 @@ export class AuthController {
       if (!user) {
         return res.status(404).json({ status: 'error', message: '用户不存在' });
       }
-      res.json({ status: 'success', data: user });
+      
+      // 更新 token 中的角色信息
+      const token = jwt.sign(
+        { userId: user._id, role: user.role },
+        process.env.JWT_SECRET!,
+        { expiresIn: process.env.JWT_EXPIRES_IN }
+      );
+
+      res.json({ 
+        status: 'success', 
+        data: { 
+          user,
+          token // 返回新的 token
+        } 
+      });
     } catch (error) {
       res.status(500).json({ status: 'error', message: '服务器错误', error });
+    }
+  }
+
+  static async updateProfile(req: AuthRequest, res: Response) {
+    try {
+      const { username, email, currentPassword, newPassword } = req.body;
+      const user = await User.findById(req.user?.userId);
+
+      if (!user) {
+        return res.status(404).json({ 
+          status: 'error', 
+          message: '用户不存在' 
+        });
+      }
+
+      // 如果要修改密码，先验证当前密码
+      if (newPassword) {
+        const isPasswordValid = await user.comparePassword(currentPassword);
+        if (!isPasswordValid) {
+          return res.status(400).json({ 
+            status: 'error', 
+            message: '当前密码不正确' 
+          });
+        }
+        user.password = newPassword;
+      }
+
+      // 检查用户名是否已存在
+      if (username && username !== user.username) {
+        const existingUser = await User.findOne({ username });
+        if (existingUser) {
+          return res.status(400).json({ 
+            status: 'error', 
+            message: '用户名已存在' 
+          });
+        }
+        user.username = username;
+      }
+
+      // 检查邮箱是否已存在
+      if (email && email !== user.email) {
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+          return res.status(400).json({ 
+            status: 'error', 
+            message: '邮箱已存在' 
+          });
+        }
+        user.email = email;
+      }
+
+      await user.save();
+
+      // 生成新的 token
+      const token = jwt.sign(
+        { userId: user._id, role: user.role },
+        process.env.JWT_SECRET!,
+        { expiresIn: process.env.JWT_EXPIRES_IN }
+      );
+
+      res.json({
+        status: 'success',
+        message: '个人信息更新成功',
+        data: {
+          user: {
+            id: user._id,
+            username: user.username,
+            email: user.email,
+            role: user.role,
+            status: user.status,
+          },
+          token
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        status: 'error', 
+        message: '服务器错误', 
+        error 
+      });
     }
   }
 } 

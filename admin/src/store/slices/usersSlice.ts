@@ -28,9 +28,13 @@ export const fetchUsers = createAsyncThunk<UserResponse, UserQueryParams>(
 // 创建用户
 export const createUser = createAsyncThunk<UserOperationResponse, CreateUserRequest>(
   'user/createUser',
-  async (userData) => {
-    const response = await axiosInstance.post<UserOperationResponse>('/users', userData);
-    return response.data;
+  async (userData, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post<UserOperationResponse>('/users', userData);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response.data);
+    }
   }
 );
 
@@ -40,18 +44,26 @@ export const updateUser = createAsyncThunk<
   { id: string; data: UpdateUserRequest }
 >(
   'user/updateUser',
-  async ({ id, data }) => {
-    const response = await axiosInstance.put<UserOperationResponse>(`/users/${id}`, data);
-    return response.data;
+  async ({ id, data }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.put<UserOperationResponse>(`/users/${id}`, data);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response.data);
+    }
   }
 );
 
 // 删除用户
 export const deleteUser = createAsyncThunk<UserOperationResponse, string>(
   'user/deleteUser',
-  async (id) => {
-    const response = await axiosInstance.delete<UserOperationResponse>(`/users/${id}`);
-    return response.data;
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.delete<UserOperationResponse>(`/users/${id}`);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response.data);
+    }
   }
 );
 
@@ -108,6 +120,12 @@ const userSlice = createSlice({
           );
           if (index !== -1) {
             state.users[index] = action.payload.data.user;
+          }
+          
+          // 如果返回了新的 token，说明是当前用户的角色被修改
+          if (action.payload.data?.token) {
+            localStorage.setItem('token', action.payload.data.token);
+            window.location.reload(); // 强制刷新页面以更新权限
           }
         }
       })
