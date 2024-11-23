@@ -115,7 +115,7 @@ cd admin && npm start
 
 ### 访问地址
 
-- 前端管理系统：http://localhost:3001
+- 前端管理系统：http://localhost:3002
 - API 文档：http://localhost:5002/api-docs
 
 ## 🔒 安全性
