@@ -52,6 +52,7 @@ git clone https://github.com/Lutiancheng1/gotoai.news-backend.git
 2. 创建环境变量文件
 
 ```bash
+cd gotoai.news-backend
 cp .env.example .env
 ```
 
