@@ -1,5 +1,18 @@
 #!/bin/bash
 
+# 检查端口占用
+check_port() {
+    local port=$1
+    if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null ; then
+        echo "端口 $port 已被占用，请先释放该端口"
+        exit 1
+    fi
+}
+
+# 检查必要端口
+check_port 3001
+check_port 5002
+
 # 确保脚本在错误时停止
 set -e
 

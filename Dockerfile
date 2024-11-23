@@ -12,5 +12,5 @@ COPY . .
 # 创建上传目录
 RUN mkdir -p uploads
 
-EXPOSE 5001
+EXPOSE 5002
 CMD ["npm", "start"] 

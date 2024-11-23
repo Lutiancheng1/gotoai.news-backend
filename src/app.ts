@@ -71,7 +71,7 @@ const initializeAndStart = async () => {
     await initAdmin();
 
     // 启动服务器
-    const port = process.env.PORT || 5001;
+    const port = process.env.PORT || 5002;
     app.listen(port, () => {
       logger.info(`Server is running on port ${port}`);
       logger.info(`API docs: http://localhost:${port}/api-docs`);

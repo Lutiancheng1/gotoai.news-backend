@@ -113,9 +113,10 @@ npm run dev
 cd admin && npm start
 ```
 
-### API 文档
+### 访问地址
 
-启动服务后访问：`http://localhost:5001/api-docs`
+- 前端管理系统：http://localhost:3001
+- API 文档：http://localhost:5002/api-docs
 
 ## 🔒 安全性
 
