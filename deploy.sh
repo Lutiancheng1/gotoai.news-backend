@@ -50,7 +50,7 @@ sleep 15
 docker-compose ps
 
 echo "检查服务可用性..."
-curl -I http://localhost:5002/api-docs || echo "后端服务未就绪"
+curl -I http://localhost:5002/api-docs || (docker-compose logs backend && echo "后端服务未就绪")
 
 # 5. 显示日志
 docker-compose logs -f 

@@ -44,8 +44,15 @@ services:
     volumes:
       - ./uploads:/app/uploads
     depends_on:
-      - mongodb
-      - redis
+      mongodb:
+          condition: service_started
+      redis:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5002/api-docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     networks:
       - app-network
 
