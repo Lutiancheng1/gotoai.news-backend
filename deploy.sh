@@ -28,9 +28,7 @@ check_port() {
     fi
 }
 
-# 检查必要端口
-check_port 5002
-check_port 6388
+
 
 # 确保脚本在错误时停止
 set -e
@@ -40,6 +38,11 @@ git pull
 
 # 2. 构建并启动服务
 docker-compose down
+
+# 检查必要端口
+check_port 5002
+check_port 6388
+
 docker-compose up -d --build
 
 # 3. 等待服务启动

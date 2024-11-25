@@ -23,6 +23,7 @@ services:
       - app-network
 
   backend:
+    container_name: talent_platform_api
     build: .
     restart: always
     ports:

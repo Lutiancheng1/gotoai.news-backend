@@ -26,7 +26,7 @@ COPY --from=builder /app/.env ./
 
 # 只安装生产依赖
 RUN npm ci --only=production \
-    && npm cache clean --force
+  && npm cache clean --force
 
 # 创建上传目录
 RUN mkdir -p uploads
