@@ -1,12 +1,10 @@
 import IORedis from 'ioredis';
 import { logger } from '../utils/logger';
 
-const isDevelopment = process.env.NODE_ENV === 'development';
-
 const redis = new IORedis({
-  host: process.env.REDIS_HOST || 'localhost',
+  host: process.env.REDIS_HOST || 'redis',
   port: parseInt(process.env.REDIS_PORT || '6379'),
-  password: isDevelopment ? undefined : process.env.REDIS_PASSWORD,
+  password: process.env.REDIS_PASSWORD || '',
   maxRetriesPerRequest: 3,
   retryStrategy: (times: number) => {
     if (times > 3) {

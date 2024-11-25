@@ -346,7 +346,7 @@ const NewsPage: React.FC = () => {
             </Row>
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item name="category" label="分类" rules={[{ required: true, message: '请选择分类' }]}>
+                <Form.Item name="category" label="分类" rules={[{ required: true, message: '请选择分类, 如无法选择请先创建分类' }]}>
                   <Select placeholder="选择分类" allowClear>
                     {Array.isArray(categories) &&
                       categories.map((category) => (

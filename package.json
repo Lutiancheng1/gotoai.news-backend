@@ -9,9 +9,11 @@
     "docker:prod": "docker-compose up -d",
     "docker:prod:down": "docker-compose down",
     "start": "NODE_ENV=development ts-node-dev --files -r dotenv/config src/app.ts dotenv_config_path=.env.development",
+    "start:prod": "node dist/app.js",
     "admin:start": "cd admin && npm start",
     "dev": "npm run docker:dev && sleep 10 && concurrently \"npm run start\" \"npm run admin:start\"",
-    "deploy": "chmod +x deploy.sh && ./deploy.sh"
+    "deploy": "chmod +x deploy.sh && ./deploy.sh",
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",
