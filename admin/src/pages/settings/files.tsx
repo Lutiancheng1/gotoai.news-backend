@@ -7,7 +7,17 @@ import { AppDispatch } from '@/store'
 import { fetchNews } from '@/store/slices/newsSlice'
 import { fetchTalents } from '@/store/slices/talentSlice'
 import copy from 'copy-to-clipboard'
+import { RcFile } from 'antd/es/upload'
 
+// 复制URL
+export const handleCopy = (url: string) => {
+  try {
+    copy(url)
+    message.success('复制成功')
+  } catch (error) {
+    message.error('复制失败')
+  }
+}
 const FilesPage: React.FC = () => {
   const [files, setFiles] = useState<FileData[]>([])
   const [loading, setLoading] = useState(false)
@@ -31,12 +41,6 @@ const FilesPage: React.FC = () => {
   useEffect(() => {
     fetchFiles()
   }, [])
-
-  // 复制URL
-  const handleCopyUrl = (url: string) => {
-    copy(url)
-    message.success('URL已复制到剪贴板')
-  }
 
   // 处理删除
   const handleDelete = (file: FileData) => {
@@ -67,24 +71,34 @@ const FilesPage: React.FC = () => {
 
     setUploading(true)
     try {
-      const file = fileList[0].originFileObj
-      if (file) {
-        const response = await uploadFile(file)
-        if (response) {
-          message.success('上传成功')
-          fetchFiles() // 刷新文件列表
-          setIsModalVisible(false)
-          setFileList([])
+      // 获取所有文件对象
+      const files = fileList.map((file) => file.originFileObj).filter((file): file is RcFile => !!file)
+
+      // 使用 Promise.all 并行上传所有文件
+      const uploadPromises = files.map((file) => uploadFile(file))
+      const results = await Promise.all(uploadPromises)
+
+      // 检查上传结果
+      const successCount = results.filter((result) => result !== null).length
+      if (successCount > 0) {
+        message.success(`成功上传 ${successCount} 个文件`)
+        if (successCount < files.length) {
+          message.warning(`${files.length - successCount} 个文件上传失败`)
         }
+        fetchFiles() // 刷新文件列表
+        setIsModalVisible(false)
+        setFileList([])
       }
+    } catch (error) {
+      message.error('文件上传失败')
     } finally {
       setUploading(false)
     }
   }
 
-  // 处理文件列表变化
+  // 修改文件列表变化处理函数,移除单文件限制
   const handleFileChange = (info: any) => {
-    setFileList(info.fileList.slice(-1))
+    setFileList(info.fileList)
   }
 
   const columns = [
@@ -109,6 +123,9 @@ const FilesPage: React.FC = () => {
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 150,
+      sorter: (a: FileData, b: FileData) => {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      },
       render: (date: string) => new Date(date).toLocaleString()
     },
     {
@@ -117,7 +134,7 @@ const FilesPage: React.FC = () => {
       render: (record: FileData) => (
         <Space size="middle">
           <Tooltip title="复制URL">
-            <Button type="text" icon={<CopyOutlined />} onClick={() => handleCopyUrl(record.url)} />
+            <Button type="text" icon={<CopyOutlined />} onClick={() => handleCopy(record.url)} />
           </Tooltip>
           <Tooltip title="预览">
             <Button type="text" icon={<EyeOutlined />} onClick={() => window.open(record.url, '_blank')} />
@@ -144,6 +161,12 @@ const FilesPage: React.FC = () => {
           dataSource={files}
           rowKey="_id"
           loading={loading}
+          scroll={{
+            y: 'calc(100vh - 380px)' // 减去其他元素的高度
+          }}
+          sticky={{
+            offsetHeader: 0
+          }}
           pagination={{
             showSizeChanger: true,
             showQuickJumper: true,
@@ -179,7 +202,12 @@ const FilesPage: React.FC = () => {
           </Button>
         ]}
       >
-        <Upload fileList={fileList} onChange={handleFileChange} beforeUpload={() => false} maxCount={1}>
+        <Upload
+          fileList={fileList}
+          onChange={handleFileChange}
+          beforeUpload={() => false}
+          multiple={true} // 启用多文件上传
+        >
           <Button icon={<UploadOutlined />}>选择文件</Button>
         </Upload>
       </Modal>

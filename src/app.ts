@@ -35,8 +35,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Rate limiting
-app.use('/api/', apiLimiter);
-app.use('/api/auth/login', loginLimiter);
+// app.use('/api/', apiLimiter);
+// app.use('/api/auth/login', loginLimiter);
 
 // Routes
 app.use('/api/auth', authRoutes);

@@ -1,10 +1,9 @@
 import axios from 'axios';
 import { store } from '../store';
 import { logout } from '../store/slices/authSlice';
-import { message } from 'antd';
 
 const axiosInstance = axios.create({
-  baseURL: process.env.REACT_APP_API_URL,
+  baseURL: process.env.NODE_ENV === 'development' ? process.env.REACT_APP_API_URL : process.env.REACT_APP_PUBLIC_API_URL,
   timeout: 5000,
 });
 

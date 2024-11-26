@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Table, Space, Button, Modal, message, Tag, Card, Form, Input, Select, Row, Col, Upload, UploadFile } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
@@ -11,12 +11,14 @@ import { fetchNews, fetchCategories, createNews, updateNews, deleteNews } from '
 import type { News, Category } from '@/types'
 import { RcFile } from 'antd/es/upload'
 import { deleteFile, uploadFile } from '@/services/fileService'
+import TinyMCEEditor from '@/components/TinymceEditor'
 
 const mdParser = new MarkdownIt()
 
 const NewsPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
   const { user } = useSelector((state: RootState) => state.auth)
+  const editorRef = useRef<{ setContent: (content: string) => {}; getContent: () => string; getFormatContent: () => string }>(null)
   const { news, categories, total, loading } = useSelector((state: RootState) => state.news)
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
@@ -90,6 +92,7 @@ const NewsPage: React.FC = () => {
 
   // 处理提交
   const handleSubmit = async (values: any) => {
+    console.log(values)
     try {
       const requestData = {
         ...values,
@@ -176,6 +179,17 @@ const NewsPage: React.FC = () => {
     setCurrentNews(record)
     setIsEditing(true)
     form.setFieldsValue(record)
+    if (editorRef.current) {
+      editorRef.current?.setContent(record.content)
+    } else {
+      setTimeout(() => {
+        if (editorRef.current) {
+          editorRef.current?.setContent(record.content)
+        } else {
+          message.error('编辑器初始化失败')
+        }
+      }, 1000)
+    }
 
     // 如果有封面，初始化文件列表进行回显
     if (record.cover) {
@@ -325,7 +339,6 @@ const NewsPage: React.FC = () => {
           }}
         />
       </Card>
-
       <Modal title={isEditing ? '编辑新闻' : '创建新闻'} width={800} open={isModalVisible} onCancel={handleModalClose} footer={null}>
         <Form form={form} layout="vertical" onFinish={handleSubmit} className="h-full">
           <div className="space-y-4">
@@ -384,7 +397,8 @@ const NewsPage: React.FC = () => {
               </Col>
             </Row>
             <Form.Item name="content" label="内容" rules={[{ required: true, message: '请输入内容' }]}>
-              <MdEditor style={{ height: '400px' }} renderHTML={(text) => mdParser.render(text)} onChange={({ text }) => form.setFieldsValue({ content: text })} />
+              <TinyMCEEditor ref={editorRef} />
+              {/* <MdEditor style={{ height: '400px' }} renderHTML={(text) => mdParser.render(text)} onChange={({ text }) => form.setFieldsValue({ content: text })} /> */}
             </Form.Item>
 
             <Form.Item className="sticky bottom-0 bg-white mb-0 flex justify-end z-10">

@@ -4,7 +4,20 @@ import { UploadController } from '../controllers/upload.controller';
 import { auth } from '../middlewares/auth.middleware';
 
 const router = express.Router();
-const upload = multer({ storage: UploadController.storage });
+const upload = multer({
+  storage: UploadController.storage,
+  fileFilter: (req, file, cb) => {
+    try {
+      // 使用 iconv-lite 进行编码转换
+      const iconv = require('iconv-lite')
+      file.originalname = iconv.decode(Buffer.from(file.originalname, 'binary'), 'utf-8')
+      cb(null, true)
+    } catch (error) {
+      console.error('文件名解码失败:', error)
+      cb(null, true)
+    }
+  }
+});
 
 // 处理函数包装器
 const handleUpload: RequestHandler = async (req, res, next) => {
