@@ -2,32 +2,41 @@ import { Request, Response } from 'express';
 import News from '../models/news.model';
 import { AuthRequest } from '../types/auth';
 import User from '../models/user.model';
-import { getTextFromMarkdown } from '../utils/utils';
+import { getTextFromMarkdown ,handleBase64Images} from '../utils/utils';
+import File from '../models/file.model';
+import fs from 'fs';
 
 export class NewsController {
   // 创建新闻
   static async create(req: AuthRequest, res: Response) {
     try {
       const { title, content, category, status = 'draft', cover } = req.body;
-      const summary = getTextFromMarkdown(content).substring(0, 20);
-
+      
+      // 先创建新闻记录，使用原始内容
       const news = await News.create({
         title,
-        content,
-        summary,
+        content,  // 使用原始内容先创建
+        summary: getTextFromMarkdown(content).substring(0, 20),
         category,
         status,
         cover: cover || null,
         author: req.user?.userId,
       });
 
-      const populatedNews = await News.findById(news._id)
-        .populate('author', 'username')
-        .populate('cover');
+      // 处理内容中的 base64 图片，传入新闻 ID 和标题
+      const processedContent = await handleBase64Images(content, req.user?.userId || '', {
+        newsId: news._id as string,
+        title: title
+      });
+
+      // 更新新闻内容
+      news.content = processedContent;
+      await news.save();
 
       res.status(201).json({
         status: 'success',
-        data: { news: populatedNews },
+        message: '新闻创建成功',
+        data: news
       });
     } catch (error) {
       res.status(500).json({ status: 'error', message: '服务器错误', error });
@@ -133,6 +142,11 @@ export class NewsController {
       
       // 如果更新内容，重新生成摘要
       if (updateData.content) {
+        const processedContent = await handleBase64Images(updateData.content, req.user?.userId || '', {
+          newsId: id,
+          title: updateData.title
+        });
+        updateData.content = processedContent;
         updateData.summary = getTextFromMarkdown(updateData.content).substring(0, 20);
       }
 
@@ -168,6 +182,23 @@ export class NewsController {
         return res.status(403).json({ status: 'error', message: '没有权限删除此新闻' });
       }
 
+      // 删除与该新闻相关的所有文件
+      const relatedFiles = await File.find({
+        $or: [
+          { 'source.type': 'news_cover', 'source.newsId': news._id },
+          { 'source.type': 'news_content', 'source.newsId': news._id }
+        ]
+      });
+
+      // 删除文件记录和物理文件
+      for (const file of relatedFiles) {
+        if (fs.existsSync(file.path)) {
+          fs.unlinkSync(file.path);
+        }
+        await file.deleteOne();
+      }
+
+      // 删除新闻记录
       await news.deleteOne();
 
       res.json({ status: 'success', message: '新闻删除成功' });

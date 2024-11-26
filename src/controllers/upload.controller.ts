@@ -46,6 +46,8 @@ export class UploadController {
       const fileId = path.parse(req.file.filename).name
       const extension = path.extname(originalName)
       
+      const { sourceType, newsId, talentId, title } = req.body
+
       const fileRecord = new File({
         userId: req.user?.userId,
         originalName: originalName,
@@ -54,7 +56,13 @@ export class UploadController {
         path: req.file.path,
         url: fileUrl,
         fileId,
-        extension
+        extension,
+        source: {
+          type: sourceType || 'user_upload',
+          newsId: sourceType === 'news_cover' ? newsId : undefined,
+          talentId: sourceType === 'talent_avatar' ? talentId : undefined,
+          title
+        }
       })
 
       await fileRecord.save()
@@ -117,5 +125,40 @@ export class UploadController {
         error
       })
     }
+  }
+
+  static async saveFile(file: any, userId: string, source: {
+    type: 'user_upload' | 'news_cover' | 'talent_avatar' | 'news_content';
+    newsId?: string;
+    talentId?: string;
+    title?: string;
+  }) {
+    const fileId = uuidv4();
+    const extension = path.extname(file.originalname);
+    const userFolder = path.join('uploads', userId);
+    
+    if (!fs.existsSync(userFolder)) {
+      fs.mkdirSync(userFolder, { recursive: true });
+    }
+    
+    const filename = `${fileId}${extension}`;
+    const filePath = path.join(userFolder, filename);
+    
+    fs.writeFileSync(filePath, file.buffer);
+    
+    const fileRecord = new File({
+      userId,
+      originalName: file.originalname,
+      size: file.buffer.length,
+      mimeType: file.mimetype,
+      path: filePath,
+      url: `${process.env.BASE_URL}/uploads/${userId}/${filename}`,
+      fileId,
+      extension,
+      source
+    });
+
+    await fileRecord.save();
+    return fileRecord;
   }
 }

@@ -110,7 +110,18 @@ const TalentsPage: React.FC = () => {
 
   // 修改文件上传函数
   const handleUpload = async (file: RcFile) => {
-    const response = await uploadFile(file)
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('sourceType', 'talent_avatar')
+
+    if (currentTalent.current) {
+      formData.append('talentId', currentTalent.current._id)
+      formData.append('title', currentTalent.current.name)
+    } else {
+      formData.append('title', form.getFieldValue('name'))
+    }
+
+    const response = await uploadFile(formData)
     if (response) {
       return response.data
     }

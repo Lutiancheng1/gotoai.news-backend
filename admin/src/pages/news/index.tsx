@@ -143,7 +143,17 @@ const NewsPage: React.FC = () => {
 
   // 处理文件上传
   const handleUpload = async (file: RcFile) => {
-    const response = await uploadFile(file)
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('sourceType', 'news_cover')
+    if (currentNews) {
+      formData.append('newsId', currentNews._id)
+      formData.append('title', currentNews.title)
+    } else {
+      formData.append('title', form.getFieldValue('title'))
+    }
+
+    const response = await uploadFile(formData)
     if (response) {
       return response.data
     }

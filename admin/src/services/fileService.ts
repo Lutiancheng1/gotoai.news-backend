@@ -26,9 +26,14 @@ export interface UploadResponse {
   data: FileData;
 }
 
-export const uploadFile = async (file: File): Promise<UploadResponse | null> => {
-  const formData = new FormData();
-  formData.append('file', file);
+export const uploadFile = async (file: File | FormData): Promise<UploadResponse | null> => {
+  let formData: FormData;
+  if (file instanceof FormData) {
+    formData = file;
+  } else {
+    formData = new FormData();
+    formData.append('file', file);
+  }
 
   try {
     const { data } = await axiosInstance.post<UploadResponse>('/upload', formData, {

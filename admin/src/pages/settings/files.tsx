@@ -8,6 +8,7 @@ import { fetchNews } from '@/store/slices/newsSlice'
 import { fetchTalents } from '@/store/slices/talentSlice'
 import copy from 'copy-to-clipboard'
 import { RcFile } from 'antd/es/upload'
+import { useNavigate } from 'react-router-dom'
 
 // 复制URL
 export const handleCopy = (url: string) => {
@@ -25,6 +26,7 @@ const FilesPage: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [fileList, setFileList] = useState<UploadFile[]>([])
   const [uploading, setUploading] = useState(false)
+  const navigate = useNavigate()
 
   // 获取文件列表
   const fetchFiles = async () => {
@@ -127,6 +129,37 @@ const FilesPage: React.FC = () => {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       },
       render: (date: string) => new Date(date).toLocaleString()
+    },
+    {
+      title: '来源',
+      dataIndex: 'source',
+      key: 'source',
+      render: (source: { type: 'user_upload' | 'news_cover' | 'talent_avatar' | 'news_content'; newsId?: string; talentId?: string; title?: string }) => {
+        switch (source.type) {
+          case 'user_upload':
+            return '用户上传'
+          case 'news_cover':
+            return (
+              <Tooltip title={`新闻标题为: ${source.title}`}>
+                <span className="cursor-pointer">新闻封面</span>
+              </Tooltip>
+            )
+          case 'talent_avatar':
+            return (
+              <Tooltip title={`人才名称为: ${source.title}`}>
+                <span className="cursor-pointer">人才头像</span>
+              </Tooltip>
+            )
+          case 'news_content':
+            return (
+              <Tooltip title={`新闻标题为: ${source.title}`}>
+                <span className="cursor-pointer">新闻内容</span>
+              </Tooltip>
+            )
+          default:
+            return '未知来源'
+        }
+      }
     },
     {
       title: '操作',
