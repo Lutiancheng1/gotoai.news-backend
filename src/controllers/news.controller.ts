@@ -105,7 +105,56 @@ export class NewsController {
       });
     }
   }
+  // 获取所有新闻（不分页）
+  static async getAllNews(req: Request, res: Response) {
+  try {
+    const { title, category, author, status } = req.query;
+    const query: any = {};
 
+    if (title) {
+      query.title = new RegExp(title as string, 'i');
+    }
+    if (category) {
+      query.category = category;
+    }
+    if (author) {
+      // 先通过用户名查找用户
+      const user = await User.findOne({ username: new RegExp(author as string, 'i') });
+      if (user) {
+        query.author = user._id;
+      } else {
+        // 如果找不到用户，返回空结果
+        return res.json({
+          status: 'success',
+          data: {
+            news: []
+          }
+        });
+      }
+    }
+    if (status) {
+      query.status = status;
+    }
+
+    const news = await News.find(query)
+      .populate('author', 'username')
+      .populate('cover')
+      .sort({ createdAt: -1 });
+
+    res.json({
+      status: 'success',
+      data: {
+        news
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      status: 'error', 
+      message: '服务器错误', 
+      error 
+    });
+  }
+}
   // 获取新闻详情
   static async getDetail(req: Request, res: Response) {
     try {

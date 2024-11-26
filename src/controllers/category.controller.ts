@@ -46,7 +46,7 @@ export class CategoryController {
   }
 
   // 获取所有分类（不分页，用于下拉选择）
-  static async getAll(req: AuthRequest, res: Response) {
+  static async getAll(req: Request, res: Response) {
     try {
       const categories = await Category.find()
         .populate('createdBy', 'username')

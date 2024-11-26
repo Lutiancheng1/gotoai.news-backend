@@ -93,7 +93,7 @@ router.get('/', auth, handleGetCategories);
  *       200:
  *         description: 成功获取所有分类
  */
-router.get('/all', auth, handleGetAllCategories);
+router.get('/all', handleGetAllCategories);
 
 /**
  * @swagger

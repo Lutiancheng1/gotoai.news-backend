@@ -30,6 +30,14 @@ const handleGetNewsDetail: RequestHandler = async (req, res, next) => {
   }
 };
 
+const handleGetAllNews: RequestHandler = async (req, res, next) => {
+  try {
+    await NewsController.getAllNews(req, res);
+  } catch (error) {
+    next(error);
+  }
+};
+
 const handleCreateNews: RequestHandler = async (req, res, next) => {
   try {
     await NewsController.create(req, res);
@@ -106,6 +114,15 @@ const handleDeleteNews: RequestHandler = async (req, res, next) => {
  *                       type: number
  */
 router.get('/', handleGetNews);
+
+/**
+ * @swagger
+ * /news/all:
+ *   get:
+ *     summary: 获取所有新闻（不分页）
+ *     tags: [News]
+ */
+router.get('/all', handleGetAllNews);
 
 /**
  * @swagger
