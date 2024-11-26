@@ -27,7 +27,18 @@ export const getTextFromMarkdown = (markdown: string): string => {
   return text
 };
 
-
+export const getNewsSummary = (text: string) => { 
+    // 查找第一个句号的位置
+  const firstSentenceMatch = text.match(/[^。]*。/);
+  
+  if (firstSentenceMatch) {
+    // 如果找到句号，返回第一个句子（包括句号）
+    return firstSentenceMatch[0].trim();
+  } else {
+    // 如果没有找到句号，返回前50个字符
+    return text.substring(0, 50) + '...';
+  }
+}
 
 // 添加工具函数处理 base64 图片
 export const handleBase64Images = async (

@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import News from '../models/news.model';
 import { AuthRequest } from '../types/auth';
 import User from '../models/user.model';
-import { getTextFromMarkdown ,handleBase64Images} from '../utils/utils';
+import { getTextFromMarkdown ,handleBase64Images, getNewsSummary} from '../utils/utils';
 import File from '../models/file.model';
 import fs from 'fs';
 
@@ -16,7 +16,7 @@ export class NewsController {
       const news = await News.create({
         title,
         content,  // 使用原始内容先创建
-        summary: getTextFromMarkdown(content).substring(0, 20),
+        summary: getNewsSummary(getTextFromMarkdown(content)),
         category,
         status,
         cover: cover || null,
@@ -196,7 +196,7 @@ export class NewsController {
           title: updateData.title
         });
         updateData.content = processedContent;
-        updateData.summary = getTextFromMarkdown(updateData.content).substring(0, 20);
+        updateData.summary = getNewsSummary(getTextFromMarkdown(updateData.content));
       }
 
       const news = await News.findByIdAndUpdate(
