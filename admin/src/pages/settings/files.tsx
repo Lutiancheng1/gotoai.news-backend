@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Table, Button, Space, message, Modal, Image, Tooltip, Card, Tag, Upload, UploadFile } from 'antd'
+import { Table, Button, Space, message, Modal, Tooltip, Card, Upload, UploadFile } from 'antd'
 import { CopyOutlined, DeleteOutlined, EyeOutlined, UploadOutlined } from '@ant-design/icons'
 import { getUserFiles, deleteFile, FileData, uploadFile } from '@/services/fileService'
 import { useDispatch } from 'react-redux'

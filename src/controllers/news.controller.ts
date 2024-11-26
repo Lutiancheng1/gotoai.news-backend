@@ -2,13 +2,14 @@ import { Request, Response } from 'express';
 import News from '../models/news.model';
 import { AuthRequest } from '../types/auth';
 import User from '../models/user.model';
+import { getTextFromMarkdown } from '../utils/utils';
 
 export class NewsController {
   // 创建新闻
   static async create(req: AuthRequest, res: Response) {
     try {
       const { title, content, category, status = 'draft', cover } = req.body;
-      const summary = content.substring(0, 200);
+      const summary = getTextFromMarkdown(content).substring(0, 20);
 
       const news = await News.create({
         title,
@@ -127,33 +128,27 @@ export class NewsController {
   // 更新新闻
   static async update(req: AuthRequest, res: Response) {
     try {
-      const { title, content, category, status, cover } = req.body;
-      const news = await News.findById(req.params.id);
+      const { id } = req.params;
+      const updateData = { ...req.body };
+      
+      // 如果更新内容，重新生成摘要
+      if (updateData.content) {
+        updateData.summary = getTextFromMarkdown(updateData.content).substring(0, 20);
+      }
+
+      const news = await News.findByIdAndUpdate(
+        id,
+        updateData,
+        { new: true }
+      ).populate('author', 'username').populate('cover');
 
       if (!news) {
         return res.status(404).json({ status: 'error', message: '新闻不存在' });
       }
 
-      const authorId = news.author.toString();
-      const userId = req.user?.userId.toString();
-      const userRole = req.user?.role;
-
-      if (authorId !== userId && userRole !== 'admin') {
-        return res.status(403).json({ status: 'error', message: '没有权限修改此新闻' });
-      }
-
-      const summary = content.substring(0, 20);
-      const updateData: any = { title, content, summary, category, status };
-      // 如果 avatar 字段存在于请求中，则更新它
-      if (req.body.hasOwnProperty('cover')) {
-        updateData.cover = cover || null; // 如果 avatar 为空，则设置为 null
-      } 
-      const updatedNews = await News.findByIdAndUpdate(req.params.id, updateData, { new: true }).populate('author', 'username');
-
       res.json({
         status: 'success',
-        message: '新闻更新成功',
-        data: { news: updatedNews },
+        data: { news }
       });
     } catch (error) {
       res.status(500).json({ status: 'error', message: '服务器错误', error });

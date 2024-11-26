@@ -46,7 +46,7 @@ app.use('/api/users', usersRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/upload', uploadRoutes);
 // Static files
-app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads'), {
   setHeaders: (res) => {
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   }

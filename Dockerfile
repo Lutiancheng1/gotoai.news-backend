@@ -28,8 +28,6 @@ COPY --from=builder /app/.env ./
 RUN npm ci --only=production \
   && npm cache clean --force
 
-# 创建上传目录
-RUN mkdir -p uploads
 
 EXPOSE 5002
 CMD ["node", "dist/app.js"] 

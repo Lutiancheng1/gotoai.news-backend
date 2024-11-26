@@ -43,6 +43,9 @@ docker-compose down
 check_port 5002
 check_port 6388
 
+mkdir -p uploads
+chmod 777 uploads
+
 docker-compose up -d --build
 
 # 3. 等待服务启动
