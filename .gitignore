@@ -12,6 +12,7 @@ admin/node_modules/
 dist/
 build/
 admin/build/
+admin/releases
 
 # Logs
 logs/

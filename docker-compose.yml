@@ -64,11 +64,3 @@ volumes:
 networks:
   app-network:
     driver: bridge
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.20.0.0/16
-    labels:
-      - "project=talent-platform"
-    driver_opts:
-      com.docker.network.bridge.name: "talent-platform-net"
