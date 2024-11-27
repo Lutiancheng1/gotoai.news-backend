@@ -18,6 +18,6 @@
       "multer"
     ]
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "admin/public/UEditor", "admin/public/UEditor", "admin/src/types/ueditor.d.ts", "admin/src/components/UEditor/index.tsx"],
   "exclude": ["node_modules", "dist"]
 } 

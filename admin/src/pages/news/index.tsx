@@ -1,10 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { Table, Space, Button, Modal, message, Tag, Card, Form, Input, Select, Row, Col, Upload, UploadFile } from 'antd'
+import { Table, Space, Button, Modal, message, Tag, Card, Form, Input, Select, Row, Col, Upload, UploadFile, Switch } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
-import { Link } from 'react-router-dom'
 import MarkdownIt from 'markdown-it'
-import MdEditor from 'react-markdown-editor-lite'
 import 'react-markdown-editor-lite/lib/index.css'
 import type { AppDispatch, RootState } from '@/store'
 import { fetchNews, fetchCategories, createNews, updateNews, deleteNews } from '@/store/slices/newsSlice'
@@ -12,8 +10,7 @@ import type { News, Category } from '@/types'
 import { RcFile } from 'antd/es/upload'
 import { deleteFile, uploadFile } from '@/services/fileService'
 import TinyMCEEditor from '@/components/TinymceEditor'
-
-const mdParser = new MarkdownIt()
+import UEditor, { UEditorRef } from '@/components/UEditor/index'
 
 const NewsPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -30,6 +27,8 @@ const NewsPage: React.FC = () => {
     pageSize: 10
   })
   const [fileList, setFileList] = useState<UploadFile[]>([])
+  const UeditorRef = useRef<UEditorRef>(null)
+  const [editorType, setEditorType] = useState<'tinymce' | 'ueditor'>('tinymce')
 
   // // 操作权限控制
   // const canControl = (newsItem: News) => {
@@ -109,6 +108,7 @@ const NewsPage: React.FC = () => {
         message.success('更新成功')
       } else {
         await dispatch(createNews(requestData)).unwrap()
+        dispatch(fetchNews({ page: 1, limit: pagination.pageSize }))
         message.success('创建成功')
       }
 
@@ -189,16 +189,20 @@ const NewsPage: React.FC = () => {
     setCurrentNews(record)
     setIsEditing(true)
     form.setFieldsValue(record)
-    if (editorRef.current) {
-      editorRef.current?.setContent(record.content)
+    if (editorType === 'tinymce') {
+      if (editorRef.current) {
+        editorRef.current?.setContent(record.content)
+      } else {
+        setTimeout(() => {
+          if (editorRef.current) {
+            editorRef.current?.setContent(record.content)
+          } else {
+            message.error('编辑器初始化失败')
+          }
+        }, 1000)
+      }
     } else {
-      setTimeout(() => {
-        if (editorRef.current) {
-          editorRef.current?.setContent(record.content)
-        } else {
-          message.error('编辑器初始化失败')
-        }
-      }, 1000)
+      UeditorRef.current?.setContent(record.content)
     }
 
     // 如果有封面，初始化文件列表进行回显
@@ -349,83 +353,103 @@ const NewsPage: React.FC = () => {
           }}
         />
       </Card>
-      <Modal title={isEditing ? '编辑新闻' : '创建新闻'} width={800} open={isModalVisible} onCancel={handleModalClose} footer={null}>
+      <Modal title={isEditing ? '编辑新闻' : '创建新闻'} width={1200} open={isModalVisible} onCancel={handleModalClose} footer={null}>
         <Form form={form} layout="vertical" onFinish={handleSubmit} className="h-full">
-          <div className="space-y-4">
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item name="title" label="标题" rules={[{ required: true, message: '请输入标题' }]}>
-                  <Input placeholder="请输入标题" />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item name="status" label="状态" rules={[{ required: true, message: '请选择状态' }]}>
-                  <Select placeholder="选择状态" allowClear>
-                    <Select.Option value="draft">草稿</Select.Option>
-                    <Select.Option value="published">已发布</Select.Option>
-                  </Select>
-                </Form.Item>
-              </Col>
-            </Row>
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item name="category" label="分类" rules={[{ required: true, message: '请选择分类, 如无法选择请先创建分类' }]}>
-                  <Select placeholder="选择分类" allowClear>
-                    {Array.isArray(categories) &&
-                      categories.map((category) => (
-                        <Select.Option key={category._id} value={category.name}>
-                          {category.name}
-                        </Select.Option>
-                      ))}
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item label="封面图片">
-                  <Upload
-                    listType="picture-card"
-                    fileList={fileList}
-                    onChange={({ fileList }) => setFileList(fileList)}
-                    customRequest={async ({ file, onSuccess, onError }) => {
-                      try {
-                        const result = await handleUpload(file as RcFile)
-                        onSuccess?.(result)
-                      } catch (err) {
-                        onError?.(err as Error)
-                      }
-                    }}
-                    onRemove={handleRemove}
-                    maxCount={1}
-                    showUploadList={{
-                      showPreviewIcon: false, // 如果你想要自定义预览，可以显示预览按钮
-                      showRemoveIcon: true
-                    }}
-                  >
-                    {fileList.length < 1 && '+ 上传封面'}
-                  </Upload>
-                </Form.Item>
-              </Col>
-            </Row>
-            <Form.Item name="content" label="内容" rules={[{ required: true, message: '请输入内容' }]}>
-              <TinyMCEEditor ref={editorRef} />
-              {/* <MdEditor style={{ height: '400px' }} renderHTML={(text) => mdParser.render(text)} onChange={({ text }) => form.setFieldsValue({ content: text })} /> */}
-            </Form.Item>
-
-            <Form.Item className="sticky bottom-0 bg-white mb-0 flex justify-end z-10">
-              <Space>
-                <Button
-                  onClick={() => {
-                    handleModalClose()
-                  }}
-                >
-                  取消
-                </Button>
-                <Button type="primary" htmlType="submit" className="bg-blue-600">
-                  {isEditing ? '更新' : '创建'}
-                </Button>
-              </Space>
-            </Form.Item>
+          <div className="flex gap-6">
+            {/* 左侧表单区域 */}
+            <div className="w-1/3 flex flex-col gap-4">
+              <Form.Item name="title" label="标题" rules={[{ required: true, message: '请输入标题' }]}>
+                <Input placeholder="请输入标题" />
+              </Form.Item>
+              <Row>
+                <Col span={12}>
+                  <Form.Item label="封面图片">
+                    <Upload
+                      listType="picture-card"
+                      fileList={fileList}
+                      onChange={({ fileList }) => setFileList(fileList)}
+                      customRequest={async ({ file, onSuccess, onError }) => {
+                        try {
+                          const result = await handleUpload(file as RcFile)
+                          onSuccess?.(result)
+                        } catch (err) {
+                          onError?.(err as Error)
+                        }
+                      }}
+                      onRemove={handleRemove}
+                      maxCount={1}
+                      showUploadList={{
+                        showPreviewIcon: false, // 如果你想要自定义预览，可以显示预览按钮
+                        showRemoveIcon: true
+                      }}
+                    >
+                      {fileList.length < 1 && '+ 上传封面'}
+                    </Upload>
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item label="切换编辑器" className="mb-2">
+                    <Switch
+                      checkedChildren="UEditor"
+                      unCheckedChildren="TinyMCE"
+                      checked={editorType === 'ueditor'}
+                      onChange={(checked) => {
+                        setEditorType(checked ? 'ueditor' : 'tinymce')
+                        setTimeout(() => {
+                          if (checked) {
+                            UeditorRef.current?.setContent(currentNews?.content || '')
+                          } else {
+                            editorRef.current?.setContent(currentNews?.content || '')
+                            document.querySelectorAll('textarea[name="editorValue"]').forEach((textarea) => {
+                              textarea.remove()
+                            })
+                          }
+                        }, 1000)
+                      }}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Form.Item name="status" label="状态" rules={[{ required: true, message: '请选择状态' }]}>
+                <Select placeholder="选择状态" allowClear>
+                  <Select.Option value="draft">草稿</Select.Option>
+                  <Select.Option value="published">已发布</Select.Option>
+                </Select>
+              </Form.Item>
+              <Form.Item name="category" label="分类" rules={[{ required: true, message: '请选择分类, 如无法选择请先创建分类' }]}>
+                <Select placeholder="选择分类" allowClear>
+                  {Array.isArray(categories) &&
+                    categories.map((category) => (
+                      <Select.Option key={category._id} value={category.name}>
+                        {category.name}
+                      </Select.Option>
+                    ))}
+                </Select>
+              </Form.Item>
+            </div>
+            {/* 右侧内容区域 */}
+            <div className="w-2/3 flex flex-col gap-4">
+              <Form.Item name="content" label="内容" rules={[{ required: true, message: '请输入内容' }]}>
+                {editorType === 'tinymce' ? <TinyMCEEditor ref={editorRef} /> : <UEditor ref={UeditorRef} />}
+                {/* <MdEditor style={{ height: '400px' }} renderHTML={(text) => mdParser.render(text)} onChange={({ text }) => form.setFieldsValue({ content: text })} /> */}
+              </Form.Item>
+            </div>
           </div>
+
+          <Form.Item className="sticky bottom-0 bg-white mb-0 flex justify-end z-10">
+            <Space>
+              <Button
+                onClick={() => {
+                  handleModalClose()
+                }}
+              >
+                取消
+              </Button>
+              <Button type="primary" htmlType="submit" className="bg-blue-600">
+                {isEditing ? '更新' : '创建'}
+              </Button>
+            </Space>
+          </Form.Item>
         </Form>
       </Modal>
     </div>

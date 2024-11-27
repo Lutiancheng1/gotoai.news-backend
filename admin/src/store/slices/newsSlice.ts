@@ -10,7 +10,8 @@ import {
   NewsOperationResponse,
   Category,
   CategoryResponse,
-  CategoryOperationResponse
+  CategoryOperationResponse,
+  CreateNewsOperationResponse
 } from '@/types';
 
 const initialState: NewsState = {
@@ -40,11 +41,11 @@ export const fetchCategories = createAsyncThunk<Category[]>(
 );
 
 // 创建新闻
-export const createNews = createAsyncThunk<NewsOperationResponse, CreateNewsRequest>(
+export const createNews = createAsyncThunk<CreateNewsOperationResponse, CreateNewsRequest>(
   'news/createNews',
   async (newsData, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post<NewsOperationResponse>('/news', newsData);
+      const response = await axiosInstance.post<CreateNewsOperationResponse>('/news', newsData);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response.data);
@@ -163,8 +164,8 @@ const newsSlice = createSlice({
       })
       // 创建新闻
       .addCase(createNews.fulfilled, (state, action) => {
-        if (action.payload.data?.news) {
-          state.news.unshift(action.payload.data.news);
+        if (action.payload.data) {
+          state.news.unshift(action.payload.data);
           state.total += 1;
         }
       })

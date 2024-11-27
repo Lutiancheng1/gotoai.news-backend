@@ -8,7 +8,7 @@ import { fetchNews } from '@/store/slices/newsSlice'
 import { fetchTalents } from '@/store/slices/talentSlice'
 import copy from 'copy-to-clipboard'
 import { RcFile } from 'antd/es/upload'
-import { useNavigate } from 'react-router-dom'
+import { TableRowSelection } from 'antd/es/table/interface'
 
 // 复制URL
 export const handleCopy = (url: string) => {
@@ -26,7 +26,7 @@ const FilesPage: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [fileList, setFileList] = useState<UploadFile[]>([])
   const [uploading, setUploading] = useState(false)
-  const navigate = useNavigate()
+  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
 
   // 获取文件列表
   const fetchFiles = async () => {
@@ -101,6 +101,99 @@ const FilesPage: React.FC = () => {
   // 修改文件列表变化处理函数,移除单文件限制
   const handleFileChange = (info: any) => {
     setFileList(info.fileList)
+  }
+
+  // 添加选择改变的处理函数
+  const onSelectChange = (selectedRowKeys: React.Key[], selectedRows: FileData[]) => {
+    setSelectedRowKeys(selectedRowKeys as string[])
+  }
+
+  // 添加批量删除处理函数
+  const handleBatchDelete = () => {
+    if (!selectedRowKeys.length) {
+      message.warning('请选择要删除的文件')
+      return
+    }
+
+    Modal.confirm({
+      title: '确认删除',
+      content: `确定要删除这 ${selectedRowKeys.length} 个文件吗？如果文件已被引用，删除可能会影响相关内容的显示。 删除后不可恢复。`,
+      okText: '删除',
+      okType: 'danger',
+      cancelText: '取消',
+      onOk: async () => {
+        try {
+          // 使用 Promise.all 并行处理所有删除请求
+          const results = await Promise.all(selectedRowKeys.map((id) => deleteFile(id)))
+
+          // 检查删除结果
+          const successCount = results.filter((result) => result).length
+
+          if (successCount > 0) {
+            message.success(`成功删除 ${successCount} 个文件`)
+            if (successCount < selectedRowKeys.length) {
+              message.warning(`${selectedRowKeys.length - successCount} 个文件删除失败`)
+            }
+            setSelectedRowKeys([]) // 清空选择
+            fetchFiles() // 刷新文件列表
+            // 刷新可能引用此文件的列表
+            dispatch(fetchNews({ page: 1, limit: 10 }))
+            dispatch(fetchTalents({ page: 1, limit: 10 }))
+          }
+        } catch (error) {
+          message.error('批量删除失败')
+        }
+      }
+    })
+  }
+
+  // 在表格上方添加操作栏，显示已选择数量和批量删除按钮
+  const OperationBar = () => (
+    <div className="mb-4 flex justify-between items-center">
+      <div className="flex items-center">
+        <span className="mr-4">已选择 {selectedRowKeys.length} 项</span>
+        {selectedRowKeys.length > 0 && (
+          <Button danger onClick={handleBatchDelete}>
+            批量删除
+          </Button>
+        )}
+      </div>
+      <Button type="primary" onClick={() => setIsModalVisible(true)}>
+        上传文件
+      </Button>
+    </div>
+  )
+
+  // 修改表格配置，添加 rowSelection
+  const rowSelection: TableRowSelection<FileData> = {
+    selectedRowKeys,
+    onChange: onSelectChange,
+    selections: [
+      {
+        key: 'all',
+        text: '全选所有',
+        onSelect: () => {
+          const allKeys = files.map((item) => item._id)
+          setSelectedRowKeys(allKeys)
+        }
+      },
+      {
+        key: 'invert',
+        text: '反选当前',
+        onSelect: () => {
+          const allKeys = files.map((item) => item._id)
+          const newSelectedKeys = allKeys.filter((key) => !selectedRowKeys.includes(key))
+          setSelectedRowKeys(newSelectedKeys)
+        }
+      },
+      {
+        key: 'none',
+        text: '取消选择',
+        onSelect: () => {
+          setSelectedRowKeys([])
+        }
+      }
+    ]
   }
 
   const columns = [
@@ -185,17 +278,16 @@ const FilesPage: React.FC = () => {
       <Card>
         <div className="mb-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold">我的文件</h1>
-          <Button type="primary" onClick={() => setIsModalVisible(true)}>
-            上传文件
-          </Button>
         </div>
+        <OperationBar />
         <Table
+          rowSelection={rowSelection}
           columns={columns}
           dataSource={files}
           rowKey="_id"
           loading={loading}
           scroll={{
-            y: 'calc(100vh - 380px)' // 减去其他元素的高度
+            y: 'calc(100vh - 380px)'
           }}
           sticky={{
             offsetHeader: 0

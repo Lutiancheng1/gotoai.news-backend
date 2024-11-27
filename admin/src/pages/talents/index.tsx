@@ -3,14 +3,11 @@ import { useDispatch, useSelector } from 'react-redux'
 import { Table, Space, Button, Modal, message, Tag, Card, Form, Input, Select, Row, Col, Avatar, Upload, Switch, UploadFile, Tooltip } from 'antd'
 import { PlusOutlined, UploadOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
-import { Link } from 'react-router-dom'
 import type { AppDispatch, RootState } from '@/store'
 import { fetchTalents, createTalent, updateTalent, deleteTalent, toggleFeatured } from '@/store/slices/talentSlice'
 import type { Talent } from '@/types'
 import { RcFile } from 'antd/es/upload'
-import axios from '@/utils/axios'
-import axiosInstance from '@/utils/axios'
-import { uploadFile, deleteFile, UploadResponse, FileData } from '@/services/fileService'
+import { uploadFile, deleteFile, FileData } from '@/services/fileService'
 
 const { TextArea } = Input
 

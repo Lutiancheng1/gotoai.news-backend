@@ -155,8 +155,14 @@ export interface UpdateNewsRequest {
   status?: 'draft' | 'published';
   cover?: FileData | null;
 }
+// 创建新闻操作响应
+export interface CreateNewsOperationResponse {
+  status: string;
+  message: string;
+  data?: News;
+}
 
-// 新闻操作响应
+//  更新新闻操作响应
 export interface NewsOperationResponse {
   status: string;
   message: string;

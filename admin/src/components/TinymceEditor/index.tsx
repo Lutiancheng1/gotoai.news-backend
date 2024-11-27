@@ -138,6 +138,8 @@ const TinyMCEEditor = forwardRef(({ onChange }: TinyMCEEditorProps, ref) => {
       <Editor
         apiKey="ck9zsnftb0gqb8wtcoi5724vdw44u5j1wixjzu9fmlh5ym64"
         init={{
+          // height: '100%',
+          min_height: 550,
           language: 'zh_CN',
           inline_boundaries: false,
           menubar: true, // 顶部菜单栏
