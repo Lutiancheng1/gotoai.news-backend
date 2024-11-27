@@ -95,7 +95,7 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <Card title="管理员登录" className="w-full max-w-md shadow-lg">
+      <Card title="新闻后台管理系统" className="w-full max-w-md shadow-lg">
         <Form form={form} name="login" onFinish={onFinish} className="space-y-4">
           <Form.Item
             name="email"
