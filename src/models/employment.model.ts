@@ -14,12 +14,14 @@ export interface IEmployment extends Document {
 }
 
 const coverSchema = new Schema({
-  userId: { type: String, required: true },
-  originalName: { type: String, required: true },
-  size: { type: Number, required: true },
-  mimeType: { type: String, required: true },
-  path: { type: String, required: true },
-  url: { type: String, required: true }
+  _id: { type: Schema.Types.ObjectId, ref: 'File' },
+  url: String,
+  path: String,
+  userId: Schema.Types.ObjectId,
+  originalName: String,
+  size: Number,
+  mimeType: String,
+  createdAt: Date
 }, { timestamps: true });
 
 const employmentSchema = new Schema(

@@ -218,7 +218,12 @@ const EmploymentManagement: React.FC = () => {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields()
-      const content = editorRef.current?.getContent()
+      let content = ''
+      if (editorType === 'tinymce') {
+        content = editorRef.current?.getContent() || ''
+      } else {
+        content = UeditorRef.current?.getContent() || ''
+      }
 
       if (!content) {
         message.error('请输入内容')
@@ -228,10 +233,6 @@ const EmploymentManagement: React.FC = () => {
       const data = {
         ...values,
         content,
-        source: {
-          type: values.source,
-          url: ''
-        },
         cover: fileList[0]?.response
           ? {
               _id: fileList[0].response._id,

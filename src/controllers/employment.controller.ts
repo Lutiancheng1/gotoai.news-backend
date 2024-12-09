@@ -12,7 +12,21 @@ export class EmploymentController {
     try {
       const { title, content, category, tag, status = 'draft', cover, source } = req.body;
       
-      // 先创建记录，使用原始内容
+      // 处理 cover 对象，确保它是有效的
+      let coverData = null;
+      if (cover && cover._id) {
+        coverData = {
+          _id: cover._id,
+          url: cover.url,
+          path: cover.path || '',  // 允许为空
+          userId: cover.userId || req.user?.userId,  // 如果没有，使用当前用户ID
+          originalName: cover.originalName,
+          size: cover.size,
+          mimeType: cover.mimeType,
+          createdAt: cover.createdAt || new Date()
+        };
+      }
+
       const employment = await Employment.create({
         title,
         content,
@@ -21,7 +35,7 @@ export class EmploymentController {
         category,
         tag,
         status,
-        cover: cover || null,
+        cover: coverData,
         author: req.user?.userId,
       });
 
