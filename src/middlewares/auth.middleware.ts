@@ -6,6 +6,7 @@ import type { IUser } from '../models/user.model'; // 添加这行
 import News from '../models/news.model';
 import Category from '../models/category.model';
 import Talent from '../models/talent.model';
+import Employment from '../models/employment.model';
 
 export const auth: RequestHandler = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -176,6 +177,32 @@ export const canModifyTalent: RequestHandler = async (req: AuthRequest, res: Res
     }
 
     res.status(403).json({ message: '没有权限修改该人才信息' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+export const canModifyEmployment: RequestHandler = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const currentUser = await User.findById(req.user?.userId);
+    const employment = await Employment.findById(req.params.id);
+
+    if (!currentUser || !employment) {
+      res.status(404).json({ message: '就业资讯或用户不存在' });
+      return;
+    }
+
+    if (currentUser.role === 'admin') {
+      next();
+      return;
+    }
+
+    if (employment.author.toString() === currentUser._id.toString()) {
+      next();
+      return;
+    }
+
+    res.status(403).json({ message: '没有权限修改该就业资讯' });
   } catch (error) {
     res.status(500).json({ message: 'Server Error' });
   }

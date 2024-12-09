@@ -6,6 +6,7 @@ import multer from 'multer'
 import File from '../models/file.model'
 import News from '../models/news.model'
 import Talent from '../models/talent.model'
+import Employment from '../models/employment.model'
 import { v4 as uuidv4 } from 'uuid'
 export class UploadController {
   static storage = multer.diskStorage({
@@ -46,7 +47,7 @@ export class UploadController {
       const fileId = path.parse(req.file.filename).name
       const extension = path.extname(originalName)
       
-      const { sourceType, newsId, talentId, title } = req.body
+      const { sourceType, newsId, talentId, employmentId, title } = req.body
 
       const fileRecord = new File({
         userId: req.user?.userId,
@@ -60,6 +61,7 @@ export class UploadController {
         source: {
           type: sourceType || 'user_upload',
           newsId: sourceType === 'news_cover' ? newsId : undefined,
+          employmentId: sourceType === 'employment_cover' ? employmentId : undefined,
           talentId: sourceType === 'talent_avatar' ? talentId : undefined,
           title
         }
@@ -96,6 +98,9 @@ export class UploadController {
       // 查找并更新引用此文件的人才信息
       await Talent.updateMany({ 'avatar._id': fileId }, { $set: { avatar: null } })
 
+      // 查找并更新引用此文件的就业资讯
+      await Employment.updateMany({ 'cover._id': fileId }, { $set: { cover: null } })
+
       // 删除物理文件
       if (fs.existsSync(fileRecord.path)) {
         fs.unlinkSync(fileRecord.path)
@@ -128,8 +133,9 @@ export class UploadController {
   }
 
   static async saveFile(file: any, userId: string, source: {
-    type: 'user_upload' | 'news_cover' | 'talent_avatar' | 'news_content';
+    type: 'user_upload' | 'news_cover' | 'talent_avatar' | 'news_content' | 'employment_cover' | 'employment_content';
     newsId?: string;
+    employmentId?: string;
     talentId?: string;
     title?: string;
   }) {

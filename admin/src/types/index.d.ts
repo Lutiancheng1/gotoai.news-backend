@@ -289,3 +289,83 @@ export interface TalentOperationResponse {
     talent: Talent;
   };
 }
+
+// 就业资讯类型
+export interface Employment {
+  _id: string;
+  title: string;
+  content: string;
+  source: string;
+  category: 'employment_news' | 'employment_policy';
+  tag: 'important' | 'job' | 'startup' | 'national_policy' | 'local_policy';
+  status: 'draft' | 'published';
+  author: {
+    _id: string;
+    username: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+  cover: FileData | null;
+}
+
+// 就业资讯状态
+export interface EmploymentState {
+  employments: Employment[];
+  total: number;
+  loading: boolean;
+  error: string | null;
+}
+
+// 就业资讯查询参数
+export interface EmploymentQueryParams {
+  page?: number;
+  limit?: number;
+  title?: string;
+  category?: string;
+  tag?: string;
+  status?: string;
+}
+
+// 就业资讯响应数据
+export interface EmploymentResponse {
+  status: string;
+  data: {
+    employments: Employment[];
+    pagination: {
+      total: number;
+      page: number;
+      pages: number;
+    };
+  };
+}
+
+// 创建就业资讯请求
+export interface CreateEmploymentRequest {
+  title: string;
+  content: string;
+  source: string;
+  category: 'employment_news' | 'employment_policy';
+  tag: 'important' | 'job' | 'startup' | 'national_policy' | 'local_policy';
+  status: 'draft' | 'published';
+  cover?: FileData | null;
+}
+
+// 更新就业资讯请求
+export interface UpdateEmploymentRequest {
+  title?: string;
+  content?: string;
+  source?: string;
+  category?: 'employment_news' | 'employment_policy';
+  tag?: 'important' | 'job' | 'startup' | 'national_policy' | 'local_policy';
+  status?: 'draft' | 'published';
+  cover?: FileData | null;
+}
+
+// 就业资讯操作响应
+export interface EmploymentOperationResponse {
+  status: string;
+  message: string;
+  data?: {
+    employment: Employment;
+  };
+}

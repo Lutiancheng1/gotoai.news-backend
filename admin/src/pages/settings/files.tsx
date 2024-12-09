@@ -227,7 +227,7 @@ const FilesPage: React.FC = () => {
       title: '来源',
       dataIndex: 'source',
       key: 'source',
-      render: (source: { type: 'user_upload' | 'news_cover' | 'talent_avatar' | 'news_content'; newsId?: string; talentId?: string; title?: string }) => {
+      render: (source: { type: 'user_upload' | 'news_cover' | 'talent_avatar' | 'news_content' | 'employment_cover' | 'employment_content'; newsId?: string; employmentId?: string; talentId?: string; title?: string }) => {
         switch (source.type) {
           case 'user_upload':
             return '用户上传'
@@ -247,6 +247,18 @@ const FilesPage: React.FC = () => {
             return (
               <Tooltip title={`新闻标题为: ${source.title}`}>
                 <span className="cursor-pointer">新闻内容</span>
+              </Tooltip>
+            )
+          case 'employment_cover':
+            return (
+              <Tooltip title={`就业资讯标题为: ${source.title}`}>
+                <span className="cursor-pointer">就业资讯封面</span>
+              </Tooltip>
+            )
+          case 'employment_content':
+            return (
+              <Tooltip title={`就业资讯标题为: ${source.title}`}>
+                <span className="cursor-pointer">就业资讯内容</span>
               </Tooltip>
             )
           default:

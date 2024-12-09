@@ -25,25 +25,7 @@ export const createNewsValidation = [
   body('status')
     .optional()
     .isIn(['draft', 'published'])
-    .withMessage('新闻状态必须是 draft 或 published'),
-  
-  body('tags')
-    .optional()
-    .isArray()
-    .withMessage('标签必须是数组格式'),
-  
-  body('tags.*')
-    .optional()
-    .trim()
-    .notEmpty()
-    .withMessage('标签不能为空')
-    .isLength({ max: 20 })
-    .withMessage('单个标签不能超过20字符'),
-  
-  body('coverImage')
-    .optional()
-    .isURL()
-    .withMessage('封面图片必须是有效的URL地址'),
+    .withMessage('新闻状态必须是 draft 或 published')
 ];
 
 export const updateNewsValidation = [
@@ -74,23 +56,5 @@ export const updateNewsValidation = [
   body('status')
     .optional()
     .isIn(['draft', 'published'])
-    .withMessage('新闻状态必须是 draft 或 published'),
-  
-  body('tags')
-    .optional()
-    .isArray()
-    .withMessage('标签必须是数组格式'),
-  
-  body('tags.*')
-    .optional()
-    .trim()
-    .notEmpty()
-    .withMessage('标签不能为空')
-    .isLength({ max: 20 })
-    .withMessage('单个标签不能超过20字符'),
-  
-  body('coverImage')
-    .optional()
-    .isURL()
-    .withMessage('封面图片必须是有效的URL地址'),
+    .withMessage('新闻状态必须是 draft 或 published')
 ]; 

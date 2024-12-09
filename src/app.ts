@@ -18,6 +18,7 @@ import talentRoutes from './routes/talent.routes';
 import usersRoutes from './routes/users.routes';
 import categoryRoutes from './routes/category.routes';
 import uploadRoutes from './routes/upload.routes';
+import employmentRoutes from './routes/employment.routes';
 
 dotenv.config();
 
@@ -45,6 +46,7 @@ app.use('/api/talents', talentRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/employment', employmentRoutes);
 // Static files
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads'), {
   setHeaders: (res) => {

@@ -10,7 +10,7 @@ export interface IFile extends mongoose.Document {
   fileId: string;
   extension: string;
   source: {
-    type: 'user_upload' | 'news_cover' | 'talent_avatar' | 'news_content';
+    type: 'user_upload' | 'news_cover' | 'talent_avatar' | 'news_content' | 'employment_cover' | 'employment_content';
     newsId?: string;
     talentId?: string;
     title?: string;
@@ -31,11 +31,12 @@ const fileSchema = new mongoose.Schema({
   source: {
     type: {
       type: String,
-      enum: ['user_upload', 'news_cover', 'talent_avatar', 'news_content'],
+      enum: ['user_upload', 'news_cover', 'talent_avatar', 'news_content', 'employment_cover', 'employment_content'],
       required: true,
       default: 'user_upload'
     },
     newsId: { type: mongoose.Schema.Types.ObjectId, ref: 'News' },
+    employmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Employment' },
     talentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Talent' },
     title: { type: String }
   }

@@ -45,7 +45,8 @@ export const handleBase64Images = async (
   content: string, 
   userId: string, 
   sourceInfo: { 
-    newsId: string;
+    newsId?: string;
+    employmentId?: string;
     title: string;
   }
 ): Promise<string> => {
@@ -74,10 +75,12 @@ export const handleBase64Images = async (
         originalname: `image_${Date.now()}.${mimeType.split('/')[1]}`,
         mimetype: mimeType
       };
-      // 使用上传控制器保存文件
+
+      // 使用上传控制器保存文件，根据来源类型设置不同的参数
       const savedFile = await UploadController.saveFile(tempFile, userId, {
-        type: 'news_content',
+        type: sourceInfo.newsId ? 'news_content' : 'employment_content',
         newsId: sourceInfo.newsId,
+        employmentId: sourceInfo.employmentId,
         title: sourceInfo.title
       });
       

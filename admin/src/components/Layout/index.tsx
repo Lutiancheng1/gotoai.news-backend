@@ -38,6 +38,11 @@ const AppLayout: React.FC = () => {
       label: '新闻'
     },
     {
+      key: 'employment',
+      icon: <FileTextOutlined />,
+      label: '就业资讯'
+    },
+    {
       key: 'talents',
       icon: <UserSwitchOutlined />,
       label: '人才'

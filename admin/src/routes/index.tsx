@@ -11,6 +11,7 @@ import AppLayout from '@/components/Layout'
 import AuthGuard from '@/components/AuthGuard'
 import Unauthorized from '@/pages/Unauthorized'
 import FilesPage from '@/pages/settings/files'
+import EmploymentManagement from '@/pages/employment'
 
 export const routes: RouteObject[] = [
   {
@@ -40,6 +41,10 @@ export const routes: RouteObject[] = [
       {
         path: 'news',
         element: <NewsPage />
+      },
+      {
+        path: 'employment',
+        element: <EmploymentManagement />
       },
       {
         path: 'talents',
