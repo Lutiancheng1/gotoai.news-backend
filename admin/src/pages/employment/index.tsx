@@ -138,13 +138,26 @@ const EmploymentManagement: React.FC = () => {
   ]
 
   // 处理表格分页变化
-  const handleTableChange = (pagination: any, filters: any, sorter: any) => {
-    setPagination(pagination)
-    fetchEmploymentList({
-      page: pagination.current,
-      limit: pagination.pageSize,
-      ...searchForm.getFieldsValue()
-    })
+  const handleTableChange = (newPagination: any) => {
+    setPagination(newPagination)
+    dispatch(
+      fetchEmployments({
+        page: newPagination.current,
+        limit: newPagination.pageSize,
+        ...searchForm.getFieldsValue()
+      })
+    )
+      .unwrap()
+      .then((response) => {
+        setEmployments(response.data.employments)
+        setPagination({
+          ...newPagination,
+          total: response.data.pagination.total
+        })
+      })
+      .catch(() => {
+        message.error('获取资讯列表失败')
+      })
   }
 
   // 处理搜索
@@ -218,12 +231,7 @@ const EmploymentManagement: React.FC = () => {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields()
-      let content = ''
-      if (editorType === 'tinymce') {
-        content = editorRef.current?.getContent() || ''
-      } else {
-        content = UeditorRef.current?.getContent() || ''
-      }
+      const content = editorType === 'tinymce' ? editorRef.current?.getContent() : UeditorRef.current?.getContent()
 
       if (!content) {
         message.error('请输入内容')
@@ -237,6 +245,8 @@ const EmploymentManagement: React.FC = () => {
           ? {
               _id: fileList[0].response._id,
               url: fileList[0].response.url,
+              path: fileList[0].response.path,
+              userId: fileList[0].response.userId,
               originalName: fileList[0].response.originalName,
               size: fileList[0].response.size,
               mimeType: fileList[0].response.mimeType,
@@ -256,13 +266,20 @@ const EmploymentManagement: React.FC = () => {
       setModalVisible(false)
       form.resetFields()
       setFileList([])
-      if (editorRef.current) {
-        editorRef.current.setContent('')
+      if (editorType === 'tinymce') {
+        editorRef.current?.setContent('')
+      } else {
+        UeditorRef.current?.setContent('')
       }
       fetchEmploymentList()
-    } catch (error) {
-      console.error('操作失败:', error)
-      message.error('操作失败')
+    } catch (error: any) {
+      // 优化错误提示
+      if (error.errors) {
+        const errorMessages = error.errors.map((err: any) => `${err.field}: ${err.message}`).join('\n')
+        message.error(errorMessages)
+      } else {
+        message.error(error.message || (editingId ? '更新失败' : '创建失败'))
+      }
     }
   }
 

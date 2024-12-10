@@ -3,9 +3,13 @@ import mongoose from 'mongoose';
 const categorySchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, '分类名称不能为空'],
-    unique: true,
-    trim: true
+    required: true
+  },
+  type: {
+    type: String,
+    required: true,
+    enum: ['news', 'recruitment'],
+    default: 'news'
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,

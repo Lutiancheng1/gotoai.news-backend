@@ -174,6 +174,7 @@ export interface NewsOperationResponse {
 export interface Category {
   _id: string;
   name: string;
+  type: 'news' | 'recruitment';
   createdBy: {
     _id: string;
     username: string;
@@ -368,4 +369,16 @@ export interface EmploymentOperationResponse {
   data?: {
     employment: Employment;
   };
+}
+
+// 创建分类请求
+export interface CreateCategoryRequest {
+  name: string;
+  type: 'news' | 'recruitment';
+}
+
+// 更新分类请求
+export interface UpdateCategoryRequest {
+  name?: string;
+  type?: 'news' | 'recruitment';
 }

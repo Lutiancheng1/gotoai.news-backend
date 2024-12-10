@@ -11,7 +11,9 @@ import {
   Category,
   CategoryResponse,
   CategoryOperationResponse,
-  CreateNewsOperationResponse
+  CreateNewsOperationResponse,
+  CreateCategoryRequest,
+  UpdateCategoryRequest
 } from '@/types';
 
 const initialState: NewsState = {
@@ -36,6 +38,15 @@ export const fetchCategories = createAsyncThunk<Category[]>(
   'news/fetchCategories',
   async () => {
     const response = await axiosInstance.get<CategoryResponse>('/categories');
+    return response.data.data.categories;
+  }
+);
+
+// 获取全部分类-无分页
+export const fetchAllCategories = createAsyncThunk<Category[], { type?: string }>(
+  'news/fetchAllCategories',
+  async ({ type }) => {
+    const response = await axiosInstance.get<CategoryResponse>(`/categories/all${type ? `?type=${type}` : ''}`);
     return response.data.data.categories;
   }
 );
@@ -97,30 +108,31 @@ export const fetchCategoriesWithPagination = createAsyncThunk<
 // 创建分类
 export const createCategory = createAsyncThunk<
   CategoryOperationResponse,
-  { name: string }
->(
-  'news/createCategory',
-  async (data) => {
+  CreateCategoryRequest,
+  { rejectValue: any }
+>('news/createCategory', async (data, { rejectWithValue }) => {
+  try {
+    console.log('Creating category with data:', data);
     const response = await axiosInstance.post<CategoryOperationResponse>('/categories', data);
     return response.data;
+  } catch (error: any) {
+    return rejectWithValue(error.response.data);
   }
-);
+});
 
 // 更新分类
 export const updateCategory = createAsyncThunk<
   CategoryOperationResponse,
-  { id: string; name: string }
->(
-  'news/updateCategory',
-  async ({ id, name }, { rejectWithValue }) => {
-    try {
-      const response = await axiosInstance.put<CategoryOperationResponse>(`/categories/${id}`, { name });
-      return response.data;
-    } catch (error: any) {
-      return rejectWithValue(error.response.data);
-    }
+  { id: string } & UpdateCategoryRequest,
+  { rejectValue: any }
+>('news/updateCategory', async ({ id, ...data }, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.put<CategoryOperationResponse>(`/categories/${id}`, data);
+    return response.data;
+  } catch (error: any) {
+    return rejectWithValue(error.response.data);
   }
-);
+});
 
 // 删除分类
 export const deleteCategory = createAsyncThunk<CategoryOperationResponse, string>(
@@ -158,6 +170,13 @@ const newsSlice = createSlice({
       // 获取分类列表
       .addCase(fetchCategories.fulfilled, (state, action) => {
         state.categories = action.payload || [];
+      })
+      // 获取全部分类
+      .addCase(fetchAllCategories.fulfilled, (state, action) => {
+        state.categories = action.payload || [];
+      })
+      .addCase(fetchAllCategories.rejected, (state) => {
+        state.categories = [];
       })
       .addCase(fetchCategories.rejected, (state) => {
         state.categories = [];

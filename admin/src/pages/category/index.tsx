@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Table, Button, Modal, message, Form, Input, Card } from 'antd'
+import { Table, Button, Modal, message, Form, Input, Card, Tag, Select } from 'antd'
 import { useDispatch, useSelector } from 'react-redux'
 import type { AppDispatch, RootState } from '@/store'
 import { fetchCategoriesWithPagination, createCategory, updateCategory, deleteCategory, fetchNews } from '@/store/slices/newsSlice'
@@ -53,24 +53,29 @@ const CategoryPage: React.FC = () => {
         await dispatch(
           updateCategory({
             id: currentCategory._id,
-            name: values.name
+            name: values.name,
+            type: values.type
           })
         ).unwrap()
-        dispatch(fetchNews({ page: 1, limit: 10 }))
         message.success('编辑分类成功')
       } else {
         await dispatch(
           createCategory({
-            name: values.name
+            name: values.name,
+            type: values.type
           })
         ).unwrap()
         message.success('创建分类成功')
       }
       setIsModalVisible(false)
       form.resetFields()
+      dispatch(
+        fetchCategoriesWithPagination({
+          page: pagination.current,
+          limit: pagination.pageSize
+        })
+      )
     } catch (error: any) {
-      console.log(error)
-
       message.error(error.message || '操作失败')
     }
   }
@@ -99,6 +104,16 @@ const CategoryPage: React.FC = () => {
       title: '分类名称',
       dataIndex: 'name',
       key: 'name'
+    },
+    {
+      title: '分类类型',
+      dataIndex: 'type',
+      key: 'type',
+      render: (type: string) => (
+        <Tag color={type === 'news' ? 'blue' : 'green'}>
+          {type === 'news' ? '新闻分类' : '招聘分类'}
+        </Tag>
+      )
     },
     {
       title: '创建者',
@@ -140,7 +155,7 @@ const CategoryPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">新闻分类管理</h2>
+        <h2 className="text-2xl font-bold">分类管理</h2>
         <Button
           type="primary"
           className="bg-blue-600 hover:bg-blue-700"
@@ -188,6 +203,12 @@ const CategoryPage: React.FC = () => {
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item name="name" label="分类名称" rules={[{ required: true, message: '请输入分类名称' }]}>
             <Input placeholder="请输入分类名称" />
+          </Form.Item>
+          <Form.Item name="type" label="分类类型" rules={[{ required: true, message: '请选择分类类型' }]}>
+            <Select placeholder="请选择分类类型">
+              <Select.Option value="news">新闻分类</Select.Option>
+              <Select.Option value="recruitment">招聘分类</Select.Option>
+            </Select>
           </Form.Item>
           <Form.Item className="mb-0 flex justify-end">
             <Button type="primary" htmlType="submit" className="bg-blue-600">

@@ -5,7 +5,7 @@ import type { ColumnsType } from 'antd/es/table'
 import MarkdownIt from 'markdown-it'
 import 'react-markdown-editor-lite/lib/index.css'
 import type { AppDispatch, RootState } from '@/store'
-import { fetchNews, fetchCategories, createNews, updateNews, deleteNews } from '@/store/slices/newsSlice'
+import { fetchNews, fetchCategories, createNews, updateNews, deleteNews, fetchAllCategories } from '@/store/slices/newsSlice'
 import type { News, Category } from '@/types'
 import { RcFile } from 'antd/es/upload'
 import { deleteFile, uploadFile } from '@/services/fileService'
@@ -48,7 +48,7 @@ const NewsPage: React.FC = () => {
       )
     }
     if (!categories.length) {
-      dispatch(fetchCategories())
+      dispatch(fetchAllCategories({}))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -289,7 +289,7 @@ const NewsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">新闻管理</h2>
+        <h2 className="text-2xl font-bold">新闻/招聘管理</h2>
         <Button
           type="primary"
           className="bg-blue-600 hover:bg-blue-700"
@@ -299,20 +299,20 @@ const NewsPage: React.FC = () => {
             form.resetFields()
           }}
         >
-          创建新闻
+          创建新闻/招聘
         </Button>
       </div>
       <Card className="mb-4">
         <Form form={searchForm} layout="inline" onFinish={handleSearch} className="w-full">
           <Form.Item name="title" className="mb-2">
-            <Input placeholder="新闻标题" allowClear />
+            <Input placeholder="新闻/招聘标题" allowClear />
           </Form.Item>
           <Form.Item name="category" className="mb-2">
             <Select placeholder="选择分类" allowClear style={{ width: 200 }}>
               {Array.isArray(categories) &&
                 categories.map((category) => (
                   <Select.Option key={category._id} value={category.name}>
-                    {category.name}
+                    {category.type === 'news' ? '新闻' : '招聘'} - {category.name}
                   </Select.Option>
                 ))}
             </Select>
@@ -353,7 +353,7 @@ const NewsPage: React.FC = () => {
           }}
         />
       </Card>
-      <Modal title={isEditing ? '编辑新闻' : '创建新闻'} width={1200} open={isModalVisible} onCancel={handleModalClose} footer={null}>
+      <Modal title={isEditing ? '编辑新闻/招聘' : '创建新闻/招聘'} width={1200} open={isModalVisible} onCancel={handleModalClose} footer={null}>
         <Form form={form} layout="vertical" onFinish={handleSubmit} className="h-full">
           <div className="flex gap-6">
             {/* 左侧表单区域 */}
@@ -421,7 +421,7 @@ const NewsPage: React.FC = () => {
                   {Array.isArray(categories) &&
                     categories.map((category) => (
                       <Select.Option key={category._id} value={category.name}>
-                        {category.name}
+                        {category.type === 'news' ? '新闻' : '招聘'} - {category.name}
                       </Select.Option>
                     ))}
                 </Select>

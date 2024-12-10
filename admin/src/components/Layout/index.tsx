@@ -35,7 +35,7 @@ const AppLayout: React.FC = () => {
     {
       key: 'news',
       icon: <FileTextOutlined />,
-      label: '新闻'
+      label: '新闻/招聘'
     },
     {
       key: 'employment',
@@ -54,7 +54,7 @@ const AppLayout: React.FC = () => {
       children: [
         {
           key: 'category',
-          label: '新闻分类'
+          label: '分类管理'
         },
         {
           key: 'files',

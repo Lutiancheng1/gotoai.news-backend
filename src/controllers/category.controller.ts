@@ -48,7 +48,15 @@ export class CategoryController {
   // 获取所有分类（不分页，用于下拉选择）
   static async getAll(req: Request, res: Response) {
     try {
-      const categories = await Category.find()
+      const { type } = req.query; // 获取 type 参数
+      const query: any = {};
+      
+      // 如果传入了 type 参数，添加到查询条件
+      if (type && ['news', 'recruitment'].includes(type as string)) {
+        query.type = type;
+      }
+
+      const categories = await Category.find(query)
         .populate('createdBy', 'username')
         .populate('updatedBy', 'username')
         .sort('-createdAt');
@@ -70,44 +78,47 @@ export class CategoryController {
 
   // 创建分类
   static async create(req: AuthRequest, res: Response) {
-    try {
-      const { name } = req.body;
+  try {
+    const { name, type } = req.body;  // 添加 type 字段
 
-      // 检查分类名是否已存在
-      const existingCategory = await Category.findOne({ name });
-      if (existingCategory) {
-        return res.status(400).json({ 
-          status: 'error',
-          message: '分类名已存在' 
-        });
-      }
-
-      const category = await Category.create({
-        name,
-        createdBy: req.user?.userId,
-      });
-      await category.populate('createdBy', 'username');
-
-      res.status(201).json({
-        status: 'success',
-        message: '分类创建成功',
-        data: {
-          category
-        }
-      });
-    } catch (error) {
-      res.status(500).json({ 
+    // 检查分类名是否已存在
+    const existingCategory = await Category.findOne({ name });
+    if (existingCategory) {
+      return res.status(400).json({
         status: 'error',
-        message: '服务器错误', 
-        error 
+        message: '分类名已存在'
       });
+    }
+
+    const category = await Category.create({
+      name,
+      type,  // 添加 type 字段
+      createdBy: req.user?.userId
+    });
+
+    const populatedCategory = await Category.findById(category._id)
+      .populate('createdBy', 'username');
+
+    res.status(201).json({
+      status: 'success',
+      message: '分类创建成功',
+      data: {
+        category: populatedCategory
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: '服务器错误',
+      error
+    });
     }
   }
 
   // 更新分类
   static async update(req: AuthRequest, res: Response) {
     try {
-      const { name } = req.body;
+      const { name, type } = req.body;
       const category = await Category.findById(req.params.id);
 
       if (!category) {
@@ -153,6 +164,7 @@ export class CategoryController {
         req.params.id,
         { 
           name,
+          type,
           updatedBy: req.user?.userId,
         },
         { new: true }

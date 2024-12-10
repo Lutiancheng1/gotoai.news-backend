@@ -30,27 +30,39 @@ export const fetchAllEmployments = createAsyncThunk<
 export const createEmployment = createAsyncThunk<
   EmploymentOperationResponse,
   CreateEmploymentRequest
->('employment/createEmployment', async (data) => {
-  const response = await axiosInstance.post<EmploymentOperationResponse>('/employment', data);
-  return response.data;
+>('employment/createEmployment', async (data, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.post<EmploymentOperationResponse>('/employment', data);
+    return response.data;
+  } catch (error: any) {
+    return rejectWithValue(error.response.data);
+  }
 });
 
 // 更新就业资讯
 export const updateEmployment = createAsyncThunk<
   EmploymentOperationResponse,
   { id: string; data: UpdateEmploymentRequest }
->('employment/updateEmployment', async ({ id, data }) => {
-  const response = await axiosInstance.put<EmploymentOperationResponse>(`/employment/${id}`, data);
-  return response.data;
+>('employment/updateEmployment', async ({ id, data }, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.put<EmploymentOperationResponse>(`/employment/${id}`, data);
+    return response.data;
+  } catch (error: any) {
+    return rejectWithValue(error.response.data);
+  }
 });
 
 // 删除就业资讯
 export const deleteEmployment = createAsyncThunk<
   EmploymentOperationResponse,
   string
->('employment/deleteEmployment', async (id) => {
-  const response = await axiosInstance.delete<EmploymentOperationResponse>(`/employment/${id}`);
-  return response.data;
+>('employment/deleteEmployment', async (id, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.delete<EmploymentOperationResponse>(`/employment/${id}`);
+    return response.data;
+  } catch (error: any) {
+    return rejectWithValue(error.response.data);
+  }
 });
 
 const employmentSlice = createSlice({
